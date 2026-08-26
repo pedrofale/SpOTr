@@ -1,0 +1,36 @@
+
+# ---- added 2026-08-26: keep code and findings, exclude data and intermediates ----
+# Raw downloads and prepared inputs are large (experiments/ is ~15GB) and reproducible
+# from the scripts that build them.
+*.npz
+*.mtx
+*.tar.gz
+*.zip
+*.h5ad
+*.rds
+*.RDS
+experiments/**/export/
+experiments/**/raw/
+experiments/**/cache/
+experiments/etracer/Tumor_Immune_Evasion_eTRACER/
+experiments/gbm_screen/b178/
+experiments/**/link_entries.txt
+experiments/**/link_cols.txt
+
+# run logs: tqdm progress bars make these large and they carry no information the
+# NOTES and result CSVs do not
+*.log
+
+__pycache__/
+*.pyc
+.pybiomart.sqlite
+
+# notebooks with embedded outputs run to tens of MB; the analysis lives in experiments/
+notebooks/*_numbat_results.ipynb
+notebooks/*_data.ipynb
+notebooks/*_benchmark_real.ipynb
+notebooks/*_benchmark_cache/
+experiments/**/ext/
+*.h5
+*.gz
+notebooks/toy_example.ipynb
