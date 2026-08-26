@@ -1,0 +1,13 @@
+GBM_ZH1007inf.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH1007inf.tar.gz/content
+GBM_ZH1007nec.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH1007nec.tar.gz/content
+GBM_zh1019inf.zip https://zenodo.org/api/records/12624860/files/GBM_zh1019inf.zip/content
+GBM_ZH8811Abulk.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH8811Abulk.tar.gz/content
+GBM_ZH916inf.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH916inf.tar.gz/content
+GBM_ZH1019T1.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH1019T1.tar.gz/content
+GBM_ZH916bulk.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH916bulk.tar.gz/content
+GBM_ZH881_inf.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH881_inf.tar.gz/content
+GBM_ZH916T1.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH916T1.tar.gz/content
+GBM_ZH8812bulk.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH8812bulk.tar.gz/content
+GBM_ZH881T1.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH881T1.tar.gz/content
+GBM_ZH8811Bbulk.tar.gz https://zenodo.org/api/records/12624860/files/GBM_ZH8811Bbulk.tar.gz/content
+GBM_MGH258.tar.gz https://zenodo.org/api/records/12624860/files/GBM_MGH258.tar.gz/content

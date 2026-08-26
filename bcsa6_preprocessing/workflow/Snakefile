@@ -1,0 +1,40 @@
+import os
+
+configfile: 'config/config.yaml'
+
+PROJECT_NAME = config["project_name"]
+OUTPUT_PATH = os.path.join(config["output_path"], PROJECT_NAME)
+
+include: 'rules/mapping.smk'
+include: 'rules/snv.smk'
+include: 'rules/cnv.smk'
+include: 'rules/gex.smk'
+
+split_keys = ["plate"]
+if config["mapping"]["split_key"] != "plate":
+    split_keys.append(config["mapping"]["split_key"])
+
+print(config["cell_lines"], split_keys)
+
+
+# rule create_joint_anndata:
+#     input:
+#         expand(rules.run_hotspot.output.done, cell_line=config["cell_lines"]),
+#         expand(rules.run_snv.output.done, cell_line=config["cell_lines"], split_key=split_keys),
+#         expand(rules.run_numbat.output.done, cell_line=config["cell_lines"], split_key=split_keys),
+#     output:
+#         anndata = os.path.join(OUTPUT_PATH, "results/joint/joint.anndata.h5ad"),
+#     log:
+#         stdout="logs/create_joint_anndata.stdout",
+#         stderr="logs/create_joint_anndata.stderr",
+#     conda:
+#         "../envs/joint.yaml",
+#     shell:
+#         """
+#         python {params.scripts_path}/create_joint_anndata.py -i {input.anndata} -o {output.anndata} >> {log.stdout} 2>> {log.stderr}
+#         """
+
+rule all:
+    input:
+        expand(rules.run_snv.output.done, cell_line=config["cell_lines"], split_key=split_keys),
+        expand(rules.run_numbat.output.done, cell_line=config["cell_lines"], split_key=split_keys), 

@@ -1,0 +1,79 @@
+project_name: "P28304"
+cell_lines: ["A549", "MCF7", "HCT116", "MDA231"]
+output_path: "/mnt/data/pedro/" # for the whole analysis. DO NOT specify a network storage path here -- that would make this much slower!
+
+scripts_path: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/workflow/scripts
+metadata_file: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/P28304_check.csv
+
+bad_plates: 
+
+biomart_annotations_file: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/biomart_gene_names.txt
+
+mapping:
+  out_dir: "/mnt/frisen_nas/pedro/P28304/results/mapping/zumis" # need lots of disk space
+  zumis_path: "/home/pedro/tools/zUMIs_tabix"
+  local_bam_dir: "results/mapping/zumis/local_bam" # local directory for BAM files (relative to output_path)
+  
+  index_sets: '6E,8F,8D,8G,7E,7F,6D,7A,7H'
+  possible_barcodes_file: /home/pedro/nextera/Barcodes_Nextera_v2.csv # nextera txt file 
+  barcode_column: "XC_DNBPE_Hot" # Illumina
+  expected_barcodes: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/P28304_expected_barcodes.csv # in case CJ has already done this
+
+  run: True # can be set to True to run the mapping step with zUMIs. Otherwise it will use the existing data in existing_output
+  zumis_base_config: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/config/zumis_main.yaml # has to be updated for the target project with the right input files
+  
+  existing_output: "/mnt/labs/jeff_storage/cell_lines_project/Cell_Lines_Data/P28304/processed_data/zumis" 
+  
+  split_key: "clone_id" # for splitting the data into different clones and doing per-clone analysis
+  min_split_size: 20 # minimum number of barcodes per group
+
+  trex:
+    run: True # if data has TREX barcodes
+    out_dir: "/mnt/frisen_nas/pedro/P28304/results/mapping/zumis_trex" 
+    zumis_base_config: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/config/zumis_trex.yaml  # has to be updated for the target project with the right input files
+    expected_barcodes: /home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/P28304_expected_barcodes.csv # in case CJ has already done this
+    jaccard_threshold: 0.7
+    readcount_threshold: 3
+    max_hamming: 2
+
+cnv:
+  snp_vcf: "/home/pedro/tools/numbat/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz"
+  reference_panel: "/home/pedro/tools/numbat/1000G_hg38"
+  gmap: "/home/pedro/tools/Eagle_v2.4.1/tables/genetic_map_hg38_withX.txt.gz"
+  eagle_path: "/home/pedro/tools/Eagle_v2.4.1/eagle"
+  numbat_path: "/home/pedro/tools/numbat"
+  threshold: 1e-5
+  gamma: 20
+  min_cells: 20
+  min_LLR: 5
+  max_entropy: 0.5
+  n_cut: 0
+  tau: 0.3
+  init_k: 3
+  max_iter: 2
+  check_convergence: False
+  call_clonal_loh: True # cell line data - only cancer cells 
+  segs_consensus_fix: "NA" # if using existing CNV calls, provide the path to the file containing the dataframe for segs_consensus_fix
+  genome: "hg38"
+
+snv:
+  rnaEditFile: "/home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/TABLE1_hg38_v2.txt.gz"
+  dbfile: "/home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/00-common_all.vcf.gz"  
+  reference_fasta: "/home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/hg38.fa.masked.gz.bgz"
+  min_alt_count: 100
+  min_depth: 1000
+  min_vaf: 0.1
+  threads:
+    pileup: 8
+    vep: 8
+  anndata:
+    perc: 10
+    filter_hela: True
+
+gex:
+  cell_cycle_genes: "/home/pedro/projects/cancer/clonal_drug_response/pipeline/ss3/resources/regev_lab_cell_cycle_genes.txt"
+  hotspot:
+    n_neighbors: 30
+    fdr_threshold: 0.001
+    top_genes: 2000
+    jobs: 64

@@ -1,4 +1,3 @@
-import torchvision
 from scvi.model import CondSCVI, DestVI
 
 

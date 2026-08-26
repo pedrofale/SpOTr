@@ -1,0 +1,15 @@
+suppressMessages({library(igraph)})
+tf <- readRDS("/mnt/data/pedro/BCSA/BCSA3/numbat_out/tree_final_2.rds")
+nm <- V(tf)$name; lf <- which(V(tf)$leaf)
+ss3 <- lf[grepl("^BCSA3_", nm[lf])]
+cat("SS3 leaves:", length(ss3), "\n")
+g <- as.undirected(tf, mode="collapse", edge.attr.comb=list(length="first"))
+w <- E(g)$length; w[is.na(w)] <- 0; w <- pmax(w, 0)
+D <- distances(g, v=ss3, to=ss3, weights=w)
+rownames(D) <- nm[ss3]; colnames(D) <- nm[ss3]
+cat("D range:", range(D), " mean:", mean(D), "\n")
+cat("n zero offdiag:", sum(D==0) - nrow(D), "\n")
+write.csv(as.data.frame(D), file.path(Sys.getenv("SP"), "bcsa3_ss3_tree_dist.csv"))
+cl <- data.frame(cell=nm[ss3], clone=V(tf)$clone[ss3], compartment=V(tf)$compartment[ss3])
+write.csv(cl, file.path(Sys.getenv("SP"), "bcsa3_ss3_tree_clones.csv"), row.names=FALSE)
+print(table(cl$clone))
