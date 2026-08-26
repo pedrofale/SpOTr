@@ -114,6 +114,13 @@ def deconvolution_loss_ls(Y, gamma, clone_assignments, clone_cnvs):
     Outer loss: scalar function of the transport plan gamma [n, m].
     """
     spot_clone_proportions = jnp.einsum('ji,ik->jk', gamma.T, clone_assignments)
+    # gamma's column sums are b_j (= 1/m for a uniform target marginal), so the raw
+    # einsum is m times too small and spot_mean collapses towards 0, leaving the loss
+    # stuck at mean(Y**2) with vanishing gradients. These are proportions: normalize
+    # them. (The use_loss_ls=False path hides this because spot_scales absorb the factor.)
+    spot_clone_proportions = spot_clone_proportions / jnp.maximum(
+        jnp.sum(spot_clone_proportions, axis=1, keepdims=True), 1e-12
+    )
     spot_mean = jnp.einsum('jk,kg->jg', spot_clone_proportions, clone_cnvs / 2.0) # divide by 2.0 because the CNVs are the copy number of the alleles
     return jnp.mean((Y - spot_mean)**2)
 
@@ -2066,3 +2073,413 @@ def run_spotr_coupled_perclade_alpha(
         "sF_ref": sF_ref,
         "sL_ref": sL_ref,
     }    
+
+
+import numpy as np
+import jax
+import jax.numpy as jnp
+from tensorflow_probability.substrates import jax as tfp
+tfd = tfp.distributions
+mcmc = tfp.mcmc
+
+# --- helper priors on logits (Logit-Normal) ---
+def _logit_normal_prior(beta, mu=0.0, sigma=1.5):
+    # beta: unconstrained logit parameter
+    return tfd.Normal(loc=mu, scale=sigma).log_prob(beta).sum()
+
+def _as_float(x):
+    return float(x) if hasattr(x, "item") else float(np.asarray(x))
+
+import numpy as np
+import jax
+import jax.numpy as jnp
+from tensorflow_probability.substrates import jax as tfp
+tfd = tfp.distributions
+mcmc = tfp.mcmc
+
+
+# --- helper priors on logits (Logit-Normal) ---
+def _logit_normal_prior(beta, mu=0.0, sigma=1.5):
+    return tfd.Normal(loc=mu, scale=sigma).log_prob(beta).sum()
+
+def _as_float(x):
+    return float(x) if hasattr(x, "item") else float(np.asarray(x))
+
+
+def run_spotr_coupled_perclade_alpha_hmc(
+    ss_simulated_adata, spatial_simulated_adata,
+    tree_distance_matrix, spatial_distance_matrix,
+    true_coupling,
+    *,
+    clade_column="clade_level2",
+    clade_to_ignore="NA",
+    # OT / Sinkhorn
+    eps=None,
+    max_exp_ratio=25.0,
+    T_sinkhorn=100,
+    J_alt=3,
+    # per-clade params
+    alpha=0.5,
+    use_decomp=False,
+    phi=0.5,
+    # posterior temperature (softens likelihood; useful if target is sharp / unstable)
+    temp=0.1,
+    # priors on logits
+    alpha_prior_mu=None,   # if None: mean(logit(alpha_init))
+    alpha_prior_sigma=1.5,
+    phi_prior_mu=None,     # if None: mean(logit(phi_init))
+    phi_prior_sigma=1.5,
+    # HMC
+    num_burnin=500,
+    num_samples=1000,
+    num_chains=1,
+    step_size=0.03,
+    num_leapfrog_steps=10,
+    # adaptation
+    adapt_step_size=True,
+    target_accept_prob=0.8,
+    # init / seed
+    seed=42,
+    store_couplings=False,  # if True: store gamma per draw (can be large)
+):
+    """
+    Bayesian (HMC) version of run_spotr_coupled_perclade_alpha.
+
+    NEW: stores per-sample SKL trace in out["skl_trace"] (and out["skl_trace_burnin"] if desired).
+
+    Samples posterior over:
+      beta_alpha[k] (always)
+      beta_phi[k]   (if use_decomp=True)
+
+    with:
+      alpha_k = sigmoid(beta_alpha)
+      phi_k   = sigmoid(beta_phi)
+
+    Target log prob:
+      - SKL(gamma*(alpha,phi), true_coupling) / temp
+      + log prior(beta_alpha) + log prior(beta_phi)
+    """
+
+    # -----------------------------
+    # 0) Repro
+    # -----------------------------
+    key = jax.random.PRNGKey(seed)
+    np.random.seed(seed)
+
+    # -----------------------------
+    # 1) Prepare OT inputs & init gamma0
+    # -----------------------------
+    C_feature, C_tree, C_space, a, b = prepare_ot_inputs(
+        ss_simulated_adata,
+        spatial_simulated_adata,
+        tree_distance_matrix,
+        spatial_distance_matrix
+    )
+
+    # init gamma0 with FEATURES-ONLY OT (alpha=0 => only features)
+    gamma0, uv0 = sinkhorn_fgw(
+        C_feature, C_tree, C_space, a, b, 0.01,
+        T_sinkhorn=50, J_alt=1, alpha=0.0, gamma0=None, uv0=None
+    )
+
+    true_coupling = jnp.asarray(true_coupling)
+
+    # -----------------------------
+    # 2) Build clade omega + masks
+    # -----------------------------
+    cell_clades = np.asarray(ss_simulated_adata.obs[clade_column].values)
+    clades = np.unique(cell_clades)
+    K = len(clades)
+    clade_to_idx = {c: i for i, c in enumerate(clades)}
+
+    n_cells = ss_simulated_adata.shape[0]
+    omega = np.zeros((n_cells, K), dtype=np.float32)
+    for i, c in enumerate(cell_clades):
+        omega[i, clade_to_idx[c]] = 1.0
+    omega = jnp.asarray(omega)
+
+    # alpha init + mask
+    alpha_init = np.full((K,), alpha, dtype=np.float32)
+    train_mask_alpha = np.ones((K,), dtype=np.float32)
+    if clade_to_ignore in clades:
+        k_ignore = clade_to_idx[clade_to_ignore]
+        train_mask_alpha[k_ignore] = 0.0
+        alpha_init[k_ignore] = 0.0
+    alpha_init = jnp.asarray(alpha_init)
+    train_mask_alpha = jnp.asarray(train_mask_alpha)
+
+    # phi init + mask + Omega
+    if use_decomp:
+        phi_init = np.full((K,), phi, dtype=np.float32)
+        train_mask_phi = np.ones((K,), dtype=np.float32)
+        if clade_to_ignore in clades:
+            k_ignore = clade_to_idx[clade_to_ignore]
+            train_mask_phi[k_ignore] = 0.0
+            phi_init[k_ignore] = 0.5
+        phi_init = jnp.asarray(phi_init)
+        train_mask_phi = jnp.asarray(train_mask_phi)
+        Omega = (omega @ omega.T).astype(jnp.float32)
+    else:
+        phi_init = None
+        train_mask_phi = None
+        Omega = None
+
+    # -----------------------------
+    # 3) Fixed scales + eps calibration
+    # -----------------------------
+    sF_ref, sL_ref = make_cladexfgw_scales(
+        C_feature, C_tree, C_space, a, b, gamma0,
+        eps=(0.05 if eps is None else eps)
+    )
+
+    if eps is None:
+        init_C = build_perclade_alpha_cost(
+            alpha_init, C_feature, C_tree, C_space, a, b, gamma0, omega, sF_ref, sL_ref,
+            use_decomp=use_decomp, Omega=Omega, phi_k=(phi_init if use_decomp else None)
+        )
+        q = jnp.quantile(jnp.abs(init_C), 0.99)
+        eps = q / max_exp_ratio
+        print(f"[run_spotr_coupled_perclade_alpha_hmc] eps set to {float(eps):.4g} from q99/max_exp_ratio")
+
+    # -----------------------------
+    # 4) Priors on logits
+    # -----------------------------
+    if alpha_prior_mu is None:
+        alpha_prior_mu = _as_float(logit(alpha_init).mean())
+    if use_decomp and (phi_prior_mu is None):
+        phi_prior_mu = _as_float(logit(phi_init).mean())
+
+    # -----------------------------
+    # 5) Differentiable likelihood: SKL of learned coupling
+    # -----------------------------
+    def _compute_gamma(alpha_k, phi_k, gamma_start, uv_start):
+        def one_round(gamma, uv):
+            C = build_perclade_alpha_cost(
+                alpha_k, C_feature, C_tree, C_space,
+                a, b, gamma, omega,
+                sF_ref, sL_ref,
+                use_decomp=use_decomp, Omega=Omega, phi_k=phi_k,
+            )
+            return sinkhorn_unrolled_safe(C, a, b, eps, T_sinkhorn, uv)
+
+        def body(carry, _):
+            gamma, uv = carry
+            gamma, uv = one_round(gamma, uv)
+            return (gamma, uv), None
+
+        (gamma_star, uv_star), _ = jax.lax.scan(body, (gamma_start, uv_start), xs=None, length=J_alt)
+        return gamma_star, uv_star
+
+    def _constrain_from_logits(beta_alpha, beta_phi=None):
+        alpha_k = jax.nn.sigmoid(beta_alpha)
+        alpha_k = jnp.where(train_mask_alpha > 0.5, alpha_k, jax.lax.stop_gradient(alpha_init))
+        alpha_k = jnp.clip(alpha_k, 1e-4, 1.0 - 1e-4)
+
+        if use_decomp:
+            phi_k = jax.nn.sigmoid(beta_phi)
+            phi_k = jnp.where(train_mask_phi > 0.5, phi_k, jax.lax.stop_gradient(phi_init))
+            phi_k = jnp.clip(phi_k, 1e-4, 1.0 - 1e-4)
+        else:
+            phi_k = None
+        return alpha_k, phi_k
+
+    def _skl_from_logits(beta_alpha, beta_phi=None):
+        alpha_k, phi_k = _constrain_from_logits(beta_alpha, beta_phi)
+        gamma_star, _ = _compute_gamma(alpha_k, phi_k, gamma0, uv0)
+        skl = gamma_skl(true_coupling, gamma_star)
+        return skl
+
+    def target_log_prob(beta_alpha, beta_phi=None):
+        skl = _skl_from_logits(beta_alpha, beta_phi)
+        loglik = -skl / temp
+
+        lp = _logit_normal_prior(beta_alpha, mu=alpha_prior_mu, sigma=alpha_prior_sigma)
+        if use_decomp:
+            lp = lp + _logit_normal_prior(beta_phi, mu=phi_prior_mu, sigma=phi_prior_sigma)
+        return loglik + lp
+
+    # -----------------------------
+    # 6) Build HMC kernel
+    # -----------------------------
+    def make_kernel():
+        if use_decomp:
+            inner = mcmc.HamiltonianMonteCarlo(
+                target_log_prob_fn=lambda ba, bp: target_log_prob(ba, bp),
+                step_size=step_size,
+                num_leapfrog_steps=num_leapfrog_steps,
+            )
+        else:
+            inner = mcmc.HamiltonianMonteCarlo(
+                target_log_prob_fn=lambda ba: target_log_prob(ba, None),
+                step_size=step_size,
+                num_leapfrog_steps=num_leapfrog_steps,
+            )
+
+        if adapt_step_size:
+            inner = mcmc.SimpleStepSizeAdaptation(
+                inner_kernel=inner,
+                num_adaptation_steps=num_burnin,
+                target_accept_prob=target_accept_prob,
+            )
+        return inner
+
+    kernel = make_kernel()
+
+    # initial states (logits)
+    init_beta_alpha = logit(alpha_init)
+    if use_decomp:
+        init_beta_phi = logit(phi_init)
+
+    # replicate init across chains
+    if num_chains > 1:
+        init_beta_alpha = jnp.tile(init_beta_alpha[None, :], (num_chains, 1))
+        if use_decomp:
+            init_beta_phi = jnp.tile(init_beta_phi[None, :], (num_chains, 1))
+
+    # -----------------------------
+    # 6b) trace_fn: ALSO record SKL per sample
+    # -----------------------------
+    def trace_fn(current_state, pkr):
+        # handle adapted kernel results
+        inner = pkr.inner_results if adapt_step_size else pkr
+
+        if use_decomp:
+            beta_alpha_cur, beta_phi_cur = current_state
+            skl_cur = _skl_from_logits(beta_alpha_cur, beta_phi_cur)
+        else:
+            beta_alpha_cur = current_state
+            skl_cur = _skl_from_logits(beta_alpha_cur, None)
+
+        return {
+            "is_accepted": inner.is_accepted,
+            "log_accept_ratio": inner.log_accept_ratio,
+            "skl": skl_cur,
+        }
+
+    # run sampling
+    if use_decomp:
+        states, trace = mcmc.sample_chain(
+            num_results=num_samples,
+            num_burnin_steps=num_burnin,
+            current_state=[init_beta_alpha, init_beta_phi],
+            kernel=kernel,
+            trace_fn=trace_fn,
+            seed=key,
+        )
+        beta_alpha_samps, beta_phi_samps = states
+    else:
+        states, trace = mcmc.sample_chain(
+            num_results=num_samples,
+            num_burnin_steps=num_burnin,
+            current_state=init_beta_alpha,
+            kernel=kernel,
+            trace_fn=trace_fn,
+            seed=key,
+        )
+        beta_alpha_samps = states
+        beta_phi_samps = None
+
+    # -----------------------------
+    # 7) Transform to alpha/phi samples + summaries
+    # -----------------------------
+    alpha_samps = jax.nn.sigmoid(beta_alpha_samps)
+    alpha_samps = jnp.where(train_mask_alpha > 0.5, alpha_samps, alpha_init)
+
+    if use_decomp:
+        phi_samps = jax.nn.sigmoid(beta_phi_samps)
+        phi_samps = jnp.where(train_mask_phi > 0.5, phi_samps, phi_init)
+    else:
+        phi_samps = None
+
+    # SKL trace (per sample; shape depends on chains)
+    skl_trace = trace["skl"]
+
+    # acceptance stats
+    is_acc = np.asarray(trace["is_accepted"])
+    acc_rate = is_acc.mean()
+
+    # posterior summaries (per clade): mean + 95% CI
+    def summarize(samples):
+        arr = np.asarray(samples)
+        # flatten chains if present
+        if arr.ndim == 3 and arr.shape[-1] == K:
+            arr = arr.reshape((-1, K))
+        elif arr.ndim == 2:
+            pass
+        else:
+            raise ValueError(f"Unexpected sample shape: {arr.shape}")
+        mean = arr.mean(axis=0)
+        lo = np.quantile(arr, 0.025, axis=0)
+        hi = np.quantile(arr, 0.975, axis=0)
+        return mean, lo, hi
+
+    alpha_mean, alpha_lo, alpha_hi = summarize(alpha_samps)
+    if use_decomp:
+        phi_mean, phi_lo, phi_hi = summarize(phi_samps)
+
+    # optional: store coupling per posterior draw (expensive)
+    coupling_samps = None
+    if store_couplings:
+        def one_draw(alpha_k, phi_k):
+            gamma_star, _ = _compute_gamma(alpha_k, phi_k, gamma0, uv0)
+            return gamma_star
+
+        aarr = np.asarray(alpha_samps)
+        if aarr.ndim == 3 and aarr.shape[-1] == K:
+            aarr = aarr.reshape((-1, K))
+        parr = None
+        if use_decomp:
+            parr = np.asarray(phi_samps)
+            if parr.ndim == 3 and parr.shape[-1] == K:
+                parr = parr.reshape((-1, K))
+
+        gammas = []
+        for i in range(aarr.shape[0]):
+            ak = jnp.asarray(aarr[i])
+            pk = jnp.asarray(parr[i]) if use_decomp else None
+            gammas.append(np.array(one_draw(ak, pk)))
+        coupling_samps = gammas
+
+    out = {
+        "clades": clades,
+        "eps": float(eps),
+        "sF_ref": sF_ref,
+        "sL_ref": sL_ref,
+        # posterior draws
+        "beta_alpha_samples": beta_alpha_samps,
+        "alpha_samples": alpha_samps,
+        "alpha_mean": alpha_mean,
+        "alpha_ci95": np.stack([alpha_lo, alpha_hi], axis=0),
+        "alpha_by_clade_mean": dict(zip(clades, alpha_mean)),
+        "alpha_by_clade_ci95": dict(zip(clades, zip(alpha_lo, alpha_hi))),
+        # phi (optional)
+        "beta_phi_samples": beta_phi_samps,
+        "phi_samples": phi_samps,
+        "phi_mean": (phi_mean if use_decomp else None),
+        "phi_ci95": (np.stack([phi_lo, phi_hi], axis=0) if use_decomp else None),
+        "phi_by_clade_mean": (dict(zip(clades, phi_mean)) if use_decomp else None),
+        "phi_by_clade_ci95": (dict(zip(clades, zip(phi_lo, phi_hi))) if use_decomp else None),
+        # MCMC diagnostics + traces
+        "accept_rate": float(acc_rate),
+        "trace": {
+            "is_accepted": trace["is_accepted"],
+            "log_accept_ratio": trace["log_accept_ratio"],
+            "skl": skl_trace,                 # <-- per-sample SKL trace
+        },
+        # convenience alias
+        "skl_trace": skl_trace,              # <-- easy access
+        # optional big storage
+        "coupling_samples": coupling_samps,
+        "meta": {
+            "temp": float(temp),
+            "num_burnin": int(num_burnin),
+            "num_samples": int(num_samples),
+            "num_chains": int(num_chains),
+            "step_size": float(step_size),
+            "num_leapfrog_steps": int(num_leapfrog_steps),
+            "adapt_step_size": bool(adapt_step_size),
+            "target_accept_prob": float(target_accept_prob),
+            "use_decomp": bool(use_decomp),
+        },
+    }
+    return out

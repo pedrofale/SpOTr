@@ -284,15 +284,29 @@ class ExpressionSimulator(DataSimulator):
         return cnvs
 
     def sample_spatial_effects(self, tree):
-        # For each cell, check where in the grid it is
-        leaf_spatial_effects = pd.DataFrame(index=self.leaf_names, columns=self.gene_names)
-        spatial_activations = pd.DataFrame(index=self.leaf_names, columns=[self.spatial_activation_name])
-        for leaf in self.leaf_names:
-            x, y = tree.cell_meta.loc[leaf, ['spatial_0', 'spatial_1']]
-            x = int(x * (self.spatial_map.shape[0] - 1))
-            y = int(y * (self.spatial_map.shape[1] - 1))
-            leaf_spatial_effects.loc[leaf] = self.spatial_map[x, y] * self.spatial_program
-            spatial_activations.loc[leaf, self.spatial_activation_name] = self.spatial_map[x, y]
+        """Look up each cell's spatial-effect value on the spatial map.
+
+        Coordinates come from Brownian motion on the tree, so they are NOT confined to
+        [0, 1] -- the spread grows with tree depth. Indexing the map directly with
+        int(x * (size - 1)) therefore overflows for x > 1 (IndexError at a few thousand
+        cells) and, more dangerously, SILENTLY WRAPS for x < 0 via negative indexing,
+        giving wrong spatial effects with no error. Min-max normalise over the population
+        first, then clip, so the lookup is well defined for any coordinate range.
+        """
+        xy = tree.cell_meta.loc[self.leaf_names, ['spatial_0', 'spatial_1']].to_numpy(float)
+        lo = xy.min(axis=0)
+        span = np.maximum(xy.max(axis=0) - lo, 1e-12)
+        xy01 = (xy - lo) / span
+        nx, ny = self.spatial_map.shape[0], self.spatial_map.shape[1]
+        xi = np.clip((xy01[:, 0] * (nx - 1)).astype(int), 0, nx - 1)
+        yi = np.clip((xy01[:, 1] * (ny - 1)).astype(int), 0, ny - 1)
+        vals = np.asarray(self.spatial_map)[yi, xi]
+
+        leaf_spatial_effects = pd.DataFrame(
+            np.outer(vals, np.asarray(self.spatial_program)),
+            index=self.leaf_names, columns=self.gene_names)
+        spatial_activations = pd.DataFrame(
+            vals, index=self.leaf_names, columns=[self.spatial_activation_name])
         return leaf_spatial_effects, spatial_activations
 
     def sample_baseline_expression(self):
