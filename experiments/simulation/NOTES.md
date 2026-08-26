@@ -1253,3 +1253,122 @@ spread over 5,000 bins there is little for the relaxation to fit.
 coverage. That was the wrong criterion: what matters is whether the clones covering the mask
 are represented in the dissociated data. LE's dominant clone C4 has 1,580 cells for 416 bins;
 EE's C18 has 244 cells for 59% of the mask. Late escape is the usable stage.
+
+---
+
+# PEtracer: the premise was measured wrong, and it is the strongest dataset we have (2026-08-26)
+
+`experiments/petracer/petracer_premise.py` reported Mantel r = +0.199, p = 0.103 and cell-pair
+r = +0.092, which is why PEtracer was set aside for months. That measurement is invalid.
+
+**The bug.** It used `t.obsm["spatial"]` as a single coordinate frame. That frame holds three
+TILED SECTIONS - DBSCAN on the saved coordinates finds three disjoint components of 2890 / 2042
+/ 4543 cells, matching samples M3-1 / M3-2 / M3-4 exactly. Both tests break under tiling:
+
+* Test B correlates clade TERRITORY distance against tree distance, but a clade spanning two
+  sections has its centroid in the gap between them. The signature is visible in the saved
+  file: clade centroid spread 662 is BELOW mean within-clade spread 1086.
+* Test C samples random cell pairs, so most pairs are cross-section and their spatial distance
+  measures tile layout rather than tissue.
+
+**Recomputed per section** (`petracer_premise_persection.py`):
+
+| section | cells | clades | coherence | coh p | Mantel r | Mantel p | cell-pair r |
+|---|---|---|---|---|---|---|---|
+| M3-1 | 2890 | 18 | 0.247 | 0.005 | **+0.530** | 0.0001 | +0.330 |
+| M3-2 | 2042 | 18 | 0.241 | 0.005 | **+0.500** | 0.0004 | +0.346 |
+| M3-4 | 4543 | 17 | 0.359 | 0.005 | **+0.328** | 0.0015 | +0.396 |
+
+All three significant, **signs agreeing across sections** - which is exactly where BCSA failed.
+Mean Mantel +0.453; cell-pair correlation +0.33 to +0.40 against eTRACER's pooled +0.092.
+
+**Comparison of every dataset screened, on the premise:**
+
+| dataset | coherence | replicates across sections? | delivered? |
+|---|---|---|---|
+| PEtracer M3 | 0.241-0.359 | YES (3/3, same sign) | untested |
+| eTRACER late escape | 0.309 | n/a (one section) | +0.108 |
+| eTRACER early escape | 0.258 | n/a | +0.064 |
+| eTRACER baseline | 0.205 | n/a | no (2.5% coverage) |
+| BCSA2 best | 0.064 | NO (0.064 vs 0.012) | no |
+| BCSA3 / BCSA6 | 0.003-0.016 | signs agree, at zero | no |
+
+**Why PEtracer may give what eTRACER could not.** eTRACER has 45 clones of which 10 drew zero
+labelled bins and 8 of 23 drew fewer than five, so per-clade alpha was never estimable
+(learned alpha spanned 0.091-0.109). PEtracer has **18 clades per section, all well populated**,
+on a 175-gene MERFISH panel, all within a SINGLE clone - so the clades are sub-clonal and
+closely related, which is precisely the confusable-expression regime in which the tree is
+supposed to matter.
+
+**The catch, stated plainly.** PEtracer reads lineage in situ, so lineage and position are
+measured in the same cells: natively a positive control, not an unmatched mapping problem. The
+test therefore CONSTRUCTS one, exactly as the simulator was validated - a disjoint split, half
+the traced cells becoming the dissociated side with its tree, half binned into pseudo-spots, so
+no cell appears in its own spot. That is a construction and must be labelled as such, but it is
+the only real dataset where both claims can be tested, since it has per-cell ground truth and
+an in-situ anchor at once.
+
+**Method note for the paper.** The premise test is the screening tool this project keeps
+recommending, and here it MISFIRED - not on biology but on a coordinate frame. Compute it per
+section, always, and check that the sign replicates across sections.
+
+## PEtracer M3-4: claim (a) confirmed strongly, claim (b) blocked by loss misalignment
+
+Disjoint split of section M3-4: 2,281 dissociated cells (with tree), 2,281 other cells binned
+into 429 pseudo-spots at 61.4 um pitch, 5.13 cells/spot, 18 clades, 175-gene MERFISH panel.
+Verified independently: no cell in its own spot, expression reconstructed from raw counts at
+0.000e+00 error, premise survives binning (spot coherence +0.368 p=0.005, Mantel +0.302
+p=0.016). Tree metric is real branch lengths from node 'time' (15,393 distinct over 16,889
+edges, corr with hop depth 0.348, patristic verified against networkx Dijkstra to 2.8e-14).
+
+Metric: SOFT accuracy -- for a cell assigned to a spot, the fraction of that spot's members
+sharing its clade. spot_clade is a strict majority in only 52% of spots and its tie-breaks skew
+toward low clade ids, so argmax-against-spot_clade is biased; soft accuracy uses the full
+composition and no tie-break. Random-spot floor 0.0977.
+
+### Claim (a): the strongest real-data result in the project
+
+| tau | alpha=0 | best | at alpha | gain | relative |
+|---|---|---|---|---|---|
+| balanced | 0.1448 | 0.2189 | 0.10 | +0.0740 | +51% |
+| 0.1 | 0.1357 | 0.2154 | 0.60 | +0.0797 | +59% |
+| **0.01** | 0.1336 | **0.3183** | 0.60 | **+0.1847** | **+138%** |
+
+Expression alone sits 48% above the random floor; tree + semi-relaxed sits 226% above it and is
+2.2x the expression-only mapping. eTRACER's comparable gain was +29% relative.
+
+### Claim (b): blocked, and not by estimability
+
+The per-clade fit early-stopped at iteration 0 of 274 with alpha frozen at its 0.10 init
+(sd 0.000), so learned / uniform-at-same-mean / shuffled are all identical at 0.2032.
+
+The cause is visible in the sweep:
+
+| alpha | 0.0 | 0.1 | 0.2 | 0.3 | 0.45 | 0.6 | 0.75 | 0.9 |
+|---|---|---|---|---|---|---|---|---|
+| VAL loss | .03578 | **.03504** | .04038 | .04019 | .03851 | .03805 | .04735 | .05928 |
+| test soft acc | .1357 | .2032 | .2039 | .2292 | .2589 | **.3022** | .1987 | .1639 |
+
+**The anchor loss selects alpha = 0.1; accuracy peaks at alpha = 0.6.** This is the strongest
+possible anchor -- the exact clade composition of every spot, not a noisy CNV proxy -- and it
+still selects on the wrong axis.
+
+**Why, generally.** Composition reconstruction is not placement accuracy. A coupling can
+reproduce a spot's aggregate clade proportions while assigning the wrong individual cells to
+it: composition is a MARGINAL statistic, placement is the JOINT. Many couplings share a
+composition and the loss cannot separate them.
+
+This supersedes the earlier "data starvation" diagnosis. Starvation was real on eTRACER (10 of
+45 clones with zero labelled bins) but is absent here -- all 18 clades are populated, hundreds
+of cells each -- and the fit fails anyway. Third dataset to show it, and the first where the
+anchor is exact.
+
+### Consequence for the two claims
+
+* (a) the tree improves the mapping -- confirmed on two real datasets, +138% relative on
+  PEtracer and +29% on eTRACER, with semi-relaxed OT essential in both.
+* (b) per-clade alpha -- oracle headroom exists in simulation (11/11 seeds, mechanism verified),
+  but alpha cannot be selected from an anchor loss at all, per-clade or global. The blocker is
+  that no available objective tracks placement accuracy, which is the identifiability result in
+  another guise: expression-reconstruction losses are monotone toward alpha=0, tree-agreement
+  losses toward alpha=1, and composition-reconstruction losses select the wrong interior point.

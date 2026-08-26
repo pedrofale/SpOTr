@@ -1,0 +1,141 @@
+{
+  "n_spots_clone_post": 3427,
+  "n_clones": 19,
+  "n_cnv_segs": 37,
+  "n_spots_any_allele": 3427,
+  "allele_depth_quantiles_per_spot_total": {
+    "0": 1.0,
+    "0.05": 65.30000000000001,
+    "0.1": 81.0,
+    "0.25": 112.0,
+    "0.5": 153.0,
+    "0.75": 198.0,
+    "0.9": 242.0,
+    "0.95": 269.6999999999998,
+    "1": 430.0
+  },
+  "segs_covered_per_spot_quantiles": {
+    "0": 1.0,
+    "0.05": 21.0,
+    "0.1": 22.0,
+    "0.25": 25.0,
+    "0.5": 27.0,
+    "0.75": 29.0,
+    "0.9": 31.0,
+    "0.95": 31.0,
+    "1": 34.0
+  },
+  "reads_per_spot_per_covered_seg_quantiles": {
+    "0": 1.0,
+    "0.05": 3.0,
+    "0.1": 3.5,
+    "0.25": 4.434057971014493,
+    "0.5": 5.62962962962963,
+    "0.75": 6.9375,
+    "0.9": 8.186013986013986,
+    "0.95": 8.930295566502464,
+    "1": 14.827586206896552
+  },
+  "reads_per_spot_seg_pair_quantiles": {
+    "0": 1.0,
+    "0.05": 1.0,
+    "0.25": 2.0,
+    "0.5": 4.0,
+    "0.75": 8.0,
+    "0.9": 14.0,
+    "0.95": 19.0,
+    "0.99": 30.0,
+    "1": 75.0
+  },
+  "frac_spot_seg_pairs_depth_lt5": 0.5832687162125266,
+  "frac_spot_seg_pairs_depth_lt10": 0.8083437994867034,
+  "pmax_y_quantiles": {
+    "0": 0.13905043114738566,
+    "0.05": 0.3215327080915835,
+    "0.1": 0.3932346178376057,
+    "0.25": 0.5330430211400111,
+    "0.5": 0.7328679548519447,
+    "0.75": 0.8748688185350288,
+    "0.9": 0.9432431738977234,
+    "0.95": 0.9679285560742508,
+    "1": 0.9992882032100557
+  },
+  "frac_spots_pmax_y_gt_0.5": 0.7849430989203385,
+  "frac_spots_pmax_y_gt_0.8": 0.3895535453749635,
+  "frac_spots_pmax_y_gt_0.9": 0.19200466880653633,
+  "frac_spots_pmax_y_gt_0.95": 0.08754012255617158,
+  "frac_spots_pmax_y_gt_0.99": 0.010213014298220018,
+  "frac_spots_near_uniform_pmax_lt_2x_chance": 0.0,
+  "normalised_entropy_median": 0.2836899368433,
+  "agreement_alleleonly_vs_joint_cloneopt": 0.15552961774146484,
+  "n_spots_with_coords": 3427,
+  "median_nn1_dist_px": 208.0,
+  "median_nnK_dist_px": 363.00137740785505,
+  "coherence_mean_over_clones_ge20": 0.0026699011293878565,
+  "coherence_p_global": 0.07,
+  "n_clones_ge20_spots": 11,
+  "n_clones_signif_p05": 2,
+  "n_clones_signif_bonferroni": 1,
+  "global_excess_coherence_all_spots": 0.005151088949682414,
+  "mantel_clones_used": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    14,
+    15,
+    16
+  ],
+  "mantel": [
+    {
+      "metric": "tree_path_n_events",
+      "n_clones": 11,
+      "pearson_r": 0.1567242187154777,
+      "p_pearson": 0.383,
+      "spearman_r": 0.18136846121548444,
+      "p_spearman": 0.27
+    },
+    {
+      "metric": "GT_hamming",
+      "n_clones": 11,
+      "pearson_r": 0.083014919743408,
+      "p_pearson": 0.524,
+      "spearman_r": 0.03866570528457219,
+      "p_spearman": 0.782
+    }
+  ],
+  "mantel_malignant_only_clones": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    14,
+    15,
+    16
+  ],
+  "mantel_malignant_only": [
+    {
+      "metric": "tree_path_n_events",
+      "n_clones": 10,
+      "pearson_r": 0.15531464976800502,
+      "p_pearson": 0.39,
+      "spearman_r": 0.15721395128618643,
+      "p_spearman": 0.388
+    },
+    {
+      "metric": "GT_hamming",
+      "n_clones": 10,
+      "pearson_r": 0.14083851385098395,
+      "p_pearson": 0.293,
+      "spearman_r": 0.07501046218874076,
+      "p_spearman": 0.59
+    }
+  ]
+}

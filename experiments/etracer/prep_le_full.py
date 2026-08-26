@@ -127,7 +127,8 @@ MIN_PER_CLONE = 12
 
 
 def main(n_bins=5000, n_cells=3000, n_hvg=2000, seed=0, force=False,
-         match_composition=True, stage="LE"):
+         match_composition=True, stage="LE", restrict_clones=None,
+         max_bins_per_clone=None, out_suffix="full", stratified=False):
     global STAGE
     STAGE = stage
     n_cells_max = n_cells
@@ -164,8 +165,62 @@ def main(n_bins=5000, n_cells=3000, n_hvg=2000, seed=0, force=False,
           f"({100*frac_pop:.2f}%)  [{int(bins_all.clone_raw.notna().sum())} carry any barcode; "
           f"{int((bins_all.clone_raw.notna() & ~bins_all.labelled).sum())} belong to tree-less clones]")
 
-    # ---- 3. uniform subsample of the bins (labelled fraction preserved in expectation) --
-    if n_bins < len(bins_all):
+    # ---- 2b. optional restriction to well-covered clones, with a per-clone bin cap -------
+    # Per-clade alpha is only estimable for a clade that HAS labelled bins. In the full-tissue
+    # run 10 of 45 clones drew zero and 8 of 23 drew fewer than five, alpha never differentiated
+    # (span 0.091-0.109), and the alpha-vs-premise correlation climbed monotonically as starved
+    # clones were dropped (+0.171 at >=1 bin, +0.286 at >=5, +0.543 at >=10). Restricting by
+    # COVERAGE -- a criterion fixed before looking at any alpha -- keeps 23 of the LE clones and
+    # 94% of the barcoded bins.
+    #
+    # The per-clone cap addresses a second problem in the same step: C4, C2 and C3 hold 6,021 of
+    # 7,357 retained bins, so without a cap they dominate the mask and force the composition
+    # mismatch that balanced OT punishes.
+    if restrict_clones:
+        keep_cl = set(Path(restrict_clones).read_text().split())
+        shared = [c for c in shared if c in keep_cl]
+        before = len(bins_all)
+        bins_all.loc[~bins_all.clone.isin(shared), "clone"] = "NA"
+        bins_all["labelled"] = bins_all.clone != "NA"
+        frac_pop = bins_all.labelled.mean()
+        print(f"[prep] restricted to {len(shared)} well-covered clones; labelled bins "
+              f"{int(bins_all.labelled.sum())} of {before} ({100*frac_pop:.2f}%)")
+    if max_bins_per_clone:
+        rows = []
+        for c, g in bins_all[bins_all.labelled].groupby("clone"):
+            rows.append(g if len(g) <= max_bins_per_clone
+                        else g.sample(max_bins_per_clone, random_state=seed))
+        kept = pd.concat(rows).index
+        drop = bins_all.index[bins_all.labelled].difference(kept)
+        bins_all.loc[drop, "clone"] = "NA"
+        bins_all.loc[drop, "labelled"] = False
+        frac_pop = bins_all.labelled.mean()
+        vc = bins_all[bins_all.labelled].clone.value_counts()
+        print(f"[prep] capped at {max_bins_per_clone} bins/clone -> {int(bins_all.labelled.sum())} "
+              f"labelled ({100*frac_pop:.2f}%), per-clone min {vc.min()} median "
+              f"{int(vc.median())} max {vc.max()}")
+
+    # ---- 3. bin selection -------------------------------------------------------------
+    # Uniform sampling preserves the labelled fraction, which is what a realistic target looks
+    # like. But once the per-clone cap has cut the labelled population to a few percent, a
+    # uniform draw keeps almost none of it (capping to 400/clone took the population to 6.4%
+    # and a 5,000-bin uniform sample then retained 318 labelled bins, fewer than without the
+    # cap). When the point of the run is to estimate a per-clade parameter, every clade needs
+    # bins, so stratify instead: keep ALL capped labelled bins and add unlabelled ones.
+    # The model is never told which bins are labelled, so this changes what can be SCORED, not
+    # what the model sees -- but it does raise the labelled fraction above the true 20.5%, and
+    # that is a difference from the deployed setting worth stating.
+    if stratified:
+        lab_idx = np.where(bins_all.labelled.to_numpy())[0]
+        unl_idx = np.where(~bins_all.labelled.to_numpy())[0]
+        n_unl = max(0, min(len(unl_idx), n_bins - len(lab_idx)))
+        take = np.sort(np.concatenate([lab_idx, rng.choice(unl_idx, size=n_unl, replace=False)]))
+        bins_ = bins_all.iloc[take].reset_index(drop=True)
+        print(f"[prep] STRATIFIED: all {len(lab_idx)} labelled bins + {n_unl} unlabelled "
+              f"= {len(bins_)} ({100*len(lab_idx)/len(bins_):.1f}% labelled, vs "
+              f"{100*frac_pop:.1f}% in the tissue -- deliberately enriched so every clade has "
+              f"bins to estimate alpha_k from)")
+    elif n_bins < len(bins_all):
         take = np.sort(rng.choice(len(bins_all), size=n_bins, replace=False))
         print(f"[prep] SUBSAMPLED {n_bins} of {len(bins_all)} bins UNIFORMLY AT RANDOM over the "
               f"whole tissue (labelled and unlabelled alike), so the labelled fraction is "
@@ -321,21 +376,24 @@ def main(n_bins=5000, n_cells=3000, n_hvg=2000, seed=0, force=False,
     # [0.15, 0.30] band is an LE assumption and rejects a perfectly good EE sample (population
     # 35.3%, realised 35.4%).
     frac = float(is_labelled.mean())
-    sd = float(np.sqrt(max(frac_pop * (1 - frac_pop), 1e-12) / len(bins_)))
-    lo, hi = frac_pop - 5 * sd, frac_pop + 5 * sd
-    assert lo <= frac <= hi, (f"labelled fraction {frac:.4f} outside [{lo:.4f}, {hi:.4f}] "
-                              f"= population {frac_pop:.4f} +- 5 binomial sd; the bin sample "
-                              f"is not uniform")
-    print(f"[prep] sampling check: realised {frac:.4f} vs population {frac_pop:.4f} "
-          f"({abs(frac - frac_pop) / sd:.1f} sd) -- uniform")
+    if stratified:
+        print(f"[prep] sampling check skipped: stratified draw, labelled fraction {frac:.4f} "
+              f"is enriched over the population {frac_pop:.4f} by design")
+    else:
+        sd = float(np.sqrt(max(frac_pop * (1 - frac_pop), 1e-12) / len(bins_)))
+        lo, hi = frac_pop - 5 * sd, frac_pop + 5 * sd
+        assert lo <= frac <= hi, (f"labelled fraction {frac:.4f} outside [{lo:.4f}, {hi:.4f}] "
+                                  f"= population {frac_pop:.4f} +- 5 binomial sd; not uniform")
+        print(f"[prep] sampling check: realised {frac:.4f} vs population {frac_pop:.4f} "
+              f"({abs(frac - frac_pop) / sd:.1f} sd) -- uniform")
 
-    np.savez_compressed(HERE / f"etracer_{STAGE}_full.npz", **out)
+    np.savez_compressed(HERE / f"etracer_{STAGE}_{out_suffix}.npz", **out)
 
     # ---- 8. summary ------------------------------------------------------------------
     lb = pd.Series(bin_clone[is_labelled]).value_counts()
     cc = pd.Series(cell_clone).value_counts()
     print("\n" + "=" * 70)
-    print(f"etracer_{STAGE}_full.npz")
+    print(f"etracer_{STAGE}_{out_suffix}.npz")
     print("=" * 70)
     print(f"cells                {n}")
     print(f"bins                 {len(bins_)}   (of {len(bins_all)} in the LE tissue)")
@@ -366,6 +424,12 @@ if __name__ == "__main__":
     p.add_argument("--n-hvg", type=int, default=2000)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--stage", default="LE", choices=["BL", "EE", "LE"])
+    p.add_argument("--restrict-clones", default=None,
+                   help="file with one clone id per line; others become NA")
+    p.add_argument("--max-bins-per-clone", type=int, default=None)
+    p.add_argument("--out-suffix", default="full")
+    p.add_argument("--stratified", action="store_true",
+                   help="keep all labelled bins + unlabelled filler, instead of a uniform draw")
     p.add_argument("--force", action="store_true", help="ignore the extracted-matrix cache")
     p.add_argument("--no-match-composition", dest="match_composition",
                    action="store_false", help="use water-filling caps instead")

@@ -1,0 +1,6 @@
+config,soft
+alpha = 0,0.13569994110327296
+"best global (val, a=0.1)",0.2032351921545258
+learned per-clade,0.2032351921545258
+uniform at same mean,0.2032351921545258
+shuffled per-clade (10),0.20323519215452582

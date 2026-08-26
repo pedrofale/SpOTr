@@ -21,6 +21,7 @@ from sklearn.metrics import adjusted_rand_score
 
 HERE = Path(__file__).resolve().parent
 STAGE = sys.argv[1] if len(sys.argv) > 1 else "LE"
+SUFFIX = sys.argv[2] if len(sys.argv) > 2 else "full"
 sys.path.insert(0, str(HERE.parent.parent / "src"))
 import spotr.spotr as S
 from spotr.perclade_v2 import build_perclade_alpha_cost_v2
@@ -31,8 +32,8 @@ EPS, T, J = 0.02, 50, 3
 GRID = [0.0, 0.05, 0.075, 0.10, 0.15, 0.20, 0.30, 0.45]
 rng = np.random.default_rng(0)
 
-d = np.load(HERE / f"etracer_{STAGE}_full.npz", allow_pickle=True)
-print(f"[run] STAGE = {STAGE}")
+d = np.load(HERE / f"etracer_{STAGE}_{SUFFIX}.npz", allow_pickle=True)
+print(f"[run] STAGE = {STAGE}, inputs = etracer_{STAGE}_{SUFFIX}.npz")
 X_sc, X_st = np.asarray(d["X_sc"], np.float32), np.asarray(d["X_st"], np.float32)
 cell_clone = np.asarray(d["cell_clone"]).astype(str)
 bin_clone = np.asarray(d["bin_clone"]).astype(str)
@@ -153,6 +154,6 @@ for thr in [1, 5, 10, 30]:
         rr, pp2 = stats.spearmanr(sub.alpha, sub.r)
         print(f"    restricted to >={thr:>2} bins (n={len(sub):>2}): Spearman {rr:+.3f} (p={pp2:.3f})")
 print(f"\n  learned alpha spread: {alpha_k.min():.4f} - {alpha_k.max():.4f} (sd {alpha_k.std():.4f})")
-AK.to_csv(HERE / f"{STAGE.lower()}_final_alpha_vs_premise.csv", index=False)
+AK.to_csv(HERE / f"{STAGE.lower()}_{SUFFIX}_alpha_vs_premise.csv", index=False)
 pd.DataFrame([dict(config=k, **v) for k, v in results.items()]).to_csv(
-    HERE / f"{STAGE.lower()}_final_results.csv", index=False)
+    HERE / f"{STAGE.lower()}_{SUFFIX}_results.csv", index=False)

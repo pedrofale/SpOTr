@@ -1,0 +1,122 @@
+{
+  "19a": {
+    "n": 3370,
+    "moran_I": 0.0039,
+    "p": 0.28,
+    "med_depth": 19.0,
+    "cnv_state": "del"
+  },
+  "1a": {
+    "n": 3371,
+    "moran_I": 0.0007,
+    "p": 0.422,
+    "med_depth": 18.0,
+    "cnv_state": "loh"
+  },
+  "11a": {
+    "n": 3165,
+    "moran_I": -0.0088,
+    "p": 0.892,
+    "med_depth": 12.0,
+    "cnv_state": "del"
+  },
+  "8b": {
+    "n": 3068,
+    "moran_I": 0.0134,
+    "p": 0.038,
+    "med_depth": 10.0,
+    "cnv_state": "loh"
+  },
+  "16a": {
+    "n": 3098,
+    "moran_I": -0.001,
+    "p": 0.556,
+    "med_depth": 11.0,
+    "cnv_state": "del"
+  },
+  "3a": {
+    "n": 2907,
+    "moran_I": 0.0077,
+    "p": 0.136,
+    "med_depth": 9.0,
+    "cnv_state": "del"
+  },
+  "6a": {
+    "n": 2835,
+    "moran_I": 0.0009,
+    "p": 0.428,
+    "med_depth": 8.0,
+    "cnv_state": "del"
+  },
+  "4a": {
+    "n": 2546,
+    "moran_I": -0.0066,
+    "p": 0.812,
+    "med_depth": 7.0,
+    "cnv_state": "loh"
+  },
+  "2c": {
+    "n": 2320,
+    "moran_I": -0.0049,
+    "p": 0.702,
+    "med_depth": 6.0,
+    "cnv_state": "del"
+  },
+  "15a": {
+    "n": 2088,
+    "moran_I": -0.0077,
+    "p": 0.824,
+    "med_depth": 5.0,
+    "cnv_state": "loh"
+  },
+  "9e": {
+    "n": 1524,
+    "moran_I": -0.0104,
+    "p": 0.814,
+    "med_depth": 4.0,
+    "cnv_state": "del"
+  },
+  "10b": {
+    "n": 1426,
+    "moran_I": 0.0028,
+    "p": 0.33,
+    "med_depth": 4.0,
+    "cnv_state": "del"
+  },
+  "22b": {
+    "n": 1043,
+    "moran_I": 0.0033,
+    "p": 0.308,
+    "med_depth": 3.0,
+    "cnv_state": "amp"
+  },
+  "12b": {
+    "n": 743,
+    "moran_I": 0.0024,
+    "p": 0.392,
+    "med_depth": 3.0,
+    "cnv_state": "loh"
+  },
+  "5d": {
+    "n": 736,
+    "moran_I": 0.0049,
+    "p": 0.294,
+    "med_depth": 3.0,
+    "cnv_state": "loh"
+  },
+  "GENOME_WIDE_minor_frac": {
+    "n": 3427,
+    "moran_I": -0.0105,
+    "p": 0.914
+  },
+  "CONTROL_total_allele_depth": {
+    "n": 3427,
+    "moran_I": 0.4337,
+    "p": 0.002
+  },
+  "CONTROL_pmax": {
+    "n": 3427,
+    "moran_I": 0.0179,
+    "p": 0.01
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "tag": "BCSA2/TumE2 both-sections run",
+  "numbat_dir": "/mnt/data/pedro/BCSA/BCSA2/numbat_out_visium_both",
+  "n_clones": 5,
+  "normal_clones": [
+    1
+  ],
+  "n_spots_in_clone_post": 3223,
+  "n_spots_in_tissue_with_coords": 3223,
+  "k_nn": 12,
+  "n_permutations": 999,
+  "confidence": {
+    "allele_p_y": {
+      "mean_max": 0.5820026359122453,
+      "median_max": 0.566467163343185,
+      "q25_max": 0.434588952828265,
+      "q75_max": 0.7237661530655994,
+      "frac_max_gt_0p50": 0.6196090598820975,
+      "frac_max_gt_0p90": 0.040024821594787464,
+      "frac_near_uniform_within_0p05_of_1overK": 0.0027924294135898233,
+      "mean_normalised_entropy": 0.6556933258387989
+    },
+    "joint_p": {
+      "mean_max": 0.8385166000274589,
+      "median_max": 0.900690161811063,
+      "q25_max": 0.7159725810085551,
+      "q75_max": 0.9851346991583615,
+      "frac_max_gt_0p50": 0.9779708346261248,
+      "frac_max_gt_0p90": 0.5026372944461681,
+      "frac_near_uniform_within_0p05_of_1overK": 0.0,
+      "mean_normalised_entropy": 0.23429158004544942
+    },
+    "expr_p_x": {
+      "mean_max": 0.8430920285324753,
+      "median_max": 0.912676400879116,
+      "q25_max": 0.723554677733533,
+      "q75_max": 0.9856908567999245,
+      "frac_max_gt_0p50": 0.974247595408005,
+      "frac_max_gt_0p90": 0.5206329506670804,
+      "frac_near_uniform_within_0p05_of_1overK": 0.0,
+      "mean_normalised_entropy": 0.22854129818191865
+    },
+    "uniform_baseline_max": 0.2
+  },
+  "column_relationships": {
+    "pearson_all_entries_p_vs_p_y": -0.1405510445987533,
+    "pearson_all_entries_p_vs_p_x": 0.9408663986874815,
+    "pearson_all_entries_p_x_vs_p_y": -0.195602888565392,
+    "argmax_agree_p_y_vs_p": 0.11542041576171269,
+    "argmax_agree_p_x_vs_p": 0.8743406763884579,
+    "argmax_agree_p_y_vs_p_x": 0.08687558175612783,
+    "mean_abs_diff_p_vs_p_y": 0.31280428649040015,
+    "mean_abs_diff_p_vs_p_x": 0.04420672241692301
+  },
+  "allele_p_y": {
+    "spot_counts": {
+      "1": 2179,
+      "2": 116,
+      "3": 185,
+      "4": 234,
+      "5": 509
+    },
+    "clones_ge20_spots": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "coherence": {
+      "1": {
+        "excess": 0.011469616779846148,
+        "null_mean": -6.934301519446762e-05,
+        "null_sd": 0.0024674712285038423,
+        "z": 4.67643134466751,
+        "p_emp": 0.001
+      },
+      "2": {
+        "excess": 0.0006466185926583684,
+        "null_mean": -0.0007182520250858093,
+        "null_sd": 0.006818360324921516,
+        "z": 0.20017578313593867,
+        "p_emp": 0.426
+      },
+      "3": {
+        "excess": 0.011068530522455433,
+        "null_mean": -0.0003013979645901652,
+        "null_sd": 0.006849692583015871,
+        "z": 1.6599180692047204,
+        "p_emp": 0.056
+      },
+      "4": {
+        "excess": 0.0018270346768640283,
+        "null_mean": -0.0003895693915918957,
+        "null_sd": 0.0065484655046957226,
+        "z": 0.33849213481638696,
+        "p_emp": 0.37
+      },
+      "5": {
+        "excess": 0.03296978718570945,
+        "null_mean": 0.00024747744964725635,
+        "null_sd": 0.005986214799340871,
+        "z": 5.466277244121806,
+        "p_emp": 0.001
+      }
+    },
+    "mean_coherence_all_clones_ge20": 0.011596317551506686,
+    "mean_coherence_tumour_subclones_only": 0.01162799274442182,
+    "mantel_branch_events": {
+      "n_clones": 5,
+      "clones": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "r": -0.21080066254712476,
+      "p": 0.419,
+      "min_attainable_p": 0.008333333333333333
+    },
+    "mantel_GT_hamming": {
+      "n_clones": 5,
+      "clones": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "r": -0.21080066254712476,
+      "p": 0.422,
+      "min_attainable_p": 0.008333333333333333
+    }
+  },
+  "joint_p": {
+    "spot_counts": {
+      "1": 18,
+      "2": 259,
+      "3": 383,
+      "4": 1703,
+      "5": 860
+    },
+    "clones_ge20_spots": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "coherence": {
+      "2": {
+        "excess": 0.26005192728742216,
+        "null_mean": -6.855355377939477e-05,
+        "null_sd": 0.006499625294124314,
+        "z": 40.02084259785737,
+        "p_emp": 0.001
+      },
+      "3": {
+        "excess": 0.07807697178703871,
+        "null_mean": -1.5916575649475168e-05,
+        "null_sd": 0.006189233888592243,
+        "z": 12.617537124687756,
+        "p_emp": 0.001
+      },
+      "4": {
+        "excess": 0.03654473040008299,
+        "null_mean": -0.0003762677168438774,
+        "null_sd": 0.003494843889280847,
+        "z": 10.564419838656743,
+        "p_emp": 0.001
+      },
+      "5": {
+        "excess": 0.04750894130606803,
+        "null_mean": -0.00033580266270693746,
+        "null_sd": 0.005040271650371451,
+        "z": 9.492493120931085,
+        "p_emp": 0.001
+      }
+    },
+    "mean_coherence_all_clones_ge20": 0.10554564269515297,
+    "mean_coherence_tumour_subclones_only": 0.10554564269515297,
+    "mantel_branch_events": {
+      "n_clones": 4,
+      "clones": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "r": 0.53212162080854,
+      "p": 0.078,
+      "min_attainable_p": 0.041666666666666664
+    },
+    "mantel_GT_hamming": {
+      "n_clones": 4,
+      "clones": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "r": 0.53212162080854,
+      "p": 0.099,
+      "min_attainable_p": 0.041666666666666664
+    }
+  }
+}
