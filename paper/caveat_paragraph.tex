@@ -1,0 +1,36 @@
+% Draft for the Discussion / end of Method overview.
+% Numbers from experiments/petracer; provenance in experiments/simulation/NOTES.md.
+
+\paragraph{Why both terms are necessary.}
+The two assays contribute disjoint information. The dissociated data carries expression and
+lineage but no position; the spatial data carries expression and position but no lineage.
+Expression is therefore the only quantity measured on both sides, and it alone can establish a
+correspondence between a cell and a location. The structural term relates the tree metric over
+cells to the spatial metric over spots, but it cannot by itself determine which cell belongs to
+which spot. Conversely, a mapping driven by expression alone is free to scatter clonally related
+cells across the tissue, because nothing in the expression data constrains it not to.
+
+In the \petracer{} data this is not a hypothetical. Expression carries no detectable lineage
+signal: the median expression distance between cells of the same clade is $0.4838$ against
+$0.4845$ between clades (Cohen's $d = 0.007$), and expression distance is uncorrelated with
+patristic distance ($r = 0.017$). Lineage, by contrast, predicts position strongly---a cell's
+nearest relative in the phylogeny lies $179\,\mu$m away against $769\,\mu$m for a random cell,
+and median spatial separation increases monotonically with patristic distance. The tree
+therefore supplies exactly the constraint that expression cannot.
+
+The consequence is visible as an interior optimum in $\alpha$. On section M3-4, expression alone
+($\alpha = 0$) attains a soft accuracy of $0.134$ against a random-assignment floor of $0.098$;
+a structure-dominated map ($\alpha = 0.9$) attains $0.184$; the mixture at $\alpha = 0.6$ attains
+$0.318$, more than double either endpoint. Replacing the tree with one of identical distance
+spectrum but permuted leaf labels recovers only $+0.002$ over $\alpha = 0$, confirming that the
+gain reflects genuine lineage information rather than the addition of arbitrary structure.
+Neither axis is sufficient alone, and their combination is what makes the mapping accurate.
+
+\paragraph{What the tree can and cannot do.}
+Clonal descendants occupy a neighbourhood rather than a point, and neighbourhoods are lineage
+mixed: only $8$--$16\%$ of spots are clonally pure and the median spot contains $2.0$--$2.7$
+effective clades of $18$. Accordingly, a cell's five nearest neighbours \emph{in space} have a
+median tree distance of $58.8$ against $66.4$ for random cells---lineage predicts space, but
+space does not recover lineage. Local clonal mixing therefore places a ceiling on what any
+structure-driven mapping can attain, and accuracy is best read relative to that ceiling and to
+the random-assignment floor rather than in absolute terms.

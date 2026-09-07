@@ -1,0 +1,31 @@
+% Draft for Results (per-clade alpha) or Discussion.
+% Numbers: experiments/petracer/percell_alpha_*.csv, percell_err_*.npy.
+
+\paragraph{Clade is a proxy for the weight a cell requires, not the quantity itself.}
+Because the dissociated and spatial halves are disjoint subsets of the same section, every
+cell's true position is known, and the weight $\alpha$ that places each cell best can be
+measured directly. Doing so resolves an apparent tension in our results: per-clade $\alpha_k$
+yields a reproducible held-out gain within a section ($+0.046$ soft accuracy, positive in $9$ of
+$9$ split-half replicates) yet transfers poorly to a different region of the same tumour.
+
+The weight a cell requires varies substantially, but that variation is only weakly organised by
+clade. Clade membership explains $\eta^2 = 0.064$ (M3-4) and $\eta^2 = 0.100$ (M3-1) of the
+variance in each cell's best $\alpha$, in both cases far above a label-permutation null
+($0.007$ and $0.012$ respectively, $p = 0.001$), but leaving $90$--$94\%$ of the variation
+\emph{within} clades. Consistent with this, $29\%$ of cells in M3-4 are placed best with no
+structural term at all, and these are distributed across clades rather than concentrated in any
+subset of them.
+
+We therefore interpret $\alpha_k$ as a proxy: sufficiently correlated with the quantity that
+actually varies to yield a measurable gain within a section, and sufficiently weakly correlated
+that re-sampling the tissue re-draws the relationship. This accounts both for the within-section
+gain and for the failure to transfer, and it suggests that a parameterisation indexed by local
+structural agreement rather than by clade would be better matched to the underlying variation.
+We leave that to future work.
+
+\paragraph{Placement error.}
+Where ground-truth positions are available we report median placement error, the distance
+between a cell's true position and the spot to which it is assigned. On M3-4 this is $612\,\mu$m
+for expression alone, $675\,\mu$m for a structure-dominated map ($\alpha = 0.9$), and
+$446\,\mu$m at $\alpha \in [0.1, 0.6]$, against a random-assignment scale of approximately
+$760\,\mu$m---the same interior optimum seen in clone-composition accuracy, in physical units.

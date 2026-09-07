@@ -1,0 +1,181 @@
+target,arm,kind,source,w,err
+M3-4,FGW (no transfer),fgw,None,0.0,549.6692104290503
+M3-4,FGW (no transfer),fgw,None,0.0804,375.4908824541281
+M3-4,FGW (no transfer),fgw,None,0.0402,364.92059121258785
+M3-4,FGW (no transfer),fgw,None,0.12864,360.684259156551
+M3-4,FGW (no transfer),fgw,None,0.2412,434.43648968492283
+M3-4,FGW (no transfer),fgw,None,0.51456,465.43263847483297
+M3-4,FGW (no transfer),fgw,None,0.35376,434.3310327772443
+M3-4,FGW (no transfer),fgw,None,0.1608,355.905985387107
+M3-4,FGW (no transfer),fgw,None,0.7236,487.76859890359975
+M3-4,FGW (no transfer),fgw,None,1.4472,504.1647005814427
+M3-4,FGW (no transfer),fgw,None,2.0904,516.8935092895742
+M3-4,FGW (no transfer),fgw,None,1.0452,479.80974014483513
+M3-1,FGW (no transfer),fgw,None,0.0,566.9182718625403
+M3-1,FGW (no transfer),fgw,None,0.007425,491.73503139696345
+M3-1,FGW (no transfer),fgw,None,0.01485,453.89559720011437
+M3-1,FGW (no transfer),fgw,None,0.04455,469.247396057095
+M3-1,FGW (no transfer),fgw,None,0.09504000000000001,586.6366181740372
+M3-1,FGW (no transfer),fgw,None,0.06534000000000001,496.84567119566816
+M3-1,FGW (no transfer),fgw,None,0.13365,548.9229590362577
+M3-1,FGW (no transfer),fgw,None,0.0297,410.6630269146307
+M3-1,FGW (no transfer),fgw,None,0.19305,571.4345977478991
+M3-1,FGW (no transfer),fgw,None,0.023760000000000003,462.4042358905504
+M3-1,FGW (no transfer),fgw,None,0.2673,610.9200981806351
+M3-1,FGW (no transfer),fgw,None,0.3861,599.3550736937698
+M3-2,FGW (no transfer),fgw,None,0.0,600.9119438777496
+M3-2,FGW (no transfer),fgw,None,0.007325,490.348666675935
+M3-2,FGW (no transfer),fgw,None,0.01465,455.8684181945286
+M3-2,FGW (no transfer),fgw,None,0.04395,439.28965444070735
+M3-2,FGW (no transfer),fgw,None,0.0293,422.4013098084449
+M3-2,FGW (no transfer),fgw,None,0.13185,564.8400636180971
+M3-2,FGW (no transfer),fgw,None,0.023440000000000003,423.31190885430806
+M3-2,FGW (no transfer),fgw,None,0.19045,564.8400636180971
+M3-2,FGW (no transfer),fgw,None,0.2637,580.9226765688597
+M3-2,FGW (no transfer),fgw,None,0.09376000000000001,548.5141039487523
+M3-2,FGW (no transfer),fgw,None,0.3809,550.5263708799554
+M3-2,FGW (no transfer),fgw,None,0.06446,427.102805233037
+M3-4,plain transfer from M3-1,plain,M3-1,0.0,549.6692104290503
+M3-4,plain transfer from M3-1,plain,M3-1,0.0402,389.56672208149155
+M3-4,plain transfer from M3-1,plain,M3-1,0.0804,375.5992735616979
+M3-4,plain transfer from M3-1,plain,M3-1,0.1608,377.8444892202174
+M3-4,plain transfer from M3-1,plain,M3-1,0.12864,370.63239101908454
+M3-4,plain transfer from M3-1,plain,M3-1,0.51456,431.7052659770376
+M3-4,plain transfer from M3-1,plain,M3-1,0.35376,404.41554136220736
+M3-4,plain transfer from M3-1,plain,M3-1,0.2412,420.6313951233815
+M3-4,plain transfer from M3-1,plain,M3-1,1.0452,466.11471889662164
+M3-4,plain transfer from M3-1,plain,M3-1,0.7236,471.8753817172788
+M3-4,plain transfer from M3-1,plain,M3-1,1.4472,474.051462708936
+M3-4,plain transfer from M3-1,plain,M3-1,2.0904,468.4309258711565
+M3-4,raked transfer from M3-1,raked,M3-1,0.0,549.6692104290503
+M3-4,raked transfer from M3-1,raked,M3-1,0.0402,386.1917744509247
+M3-4,raked transfer from M3-1,raked,M3-1,0.0804,374.75523521527924
+M3-4,raked transfer from M3-1,raked,M3-1,0.12864,374.09539848180066
+M3-4,raked transfer from M3-1,raked,M3-1,0.1608,375.4908824541281
+M3-4,raked transfer from M3-1,raked,M3-1,0.35376,399.6666279277309
+M3-4,raked transfer from M3-1,raked,M3-1,0.2412,378.69594799501374
+M3-4,raked transfer from M3-1,raked,M3-1,0.51456,439.4801401185082
+M3-4,raked transfer from M3-1,raked,M3-1,1.0452,490.4591363068611
+M3-4,raked transfer from M3-1,raked,M3-1,0.7236,457.5547374835586
+M3-4,raked transfer from M3-1,raked,M3-1,1.4472,492.3587314305192
+M3-4,raked transfer from M3-1,raked,M3-1,2.0904,487.0638898793464
+M3-4,plain transfer from M3-2,plain,M3-2,0.0,549.6692104290503
+M3-4,plain transfer from M3-2,plain,M3-2,0.0804,375.1913540116492
+M3-4,plain transfer from M3-2,plain,M3-2,0.0402,380.5685229955846
+M3-4,plain transfer from M3-2,plain,M3-2,0.12864,380.47420542928427
+M3-4,plain transfer from M3-2,plain,M3-2,0.2412,396.5823446281783
+M3-4,plain transfer from M3-2,plain,M3-2,0.35376,379.4392696820317
+M3-4,plain transfer from M3-2,plain,M3-2,0.1608,378.275461833035
+M3-4,plain transfer from M3-2,plain,M3-2,0.51456,432.6380382826196
+M3-4,plain transfer from M3-2,plain,M3-2,0.7236,475.4360832050929
+M3-4,plain transfer from M3-2,plain,M3-2,2.0904,477.66215243277554
+M3-4,plain transfer from M3-2,plain,M3-2,1.0452,480.5429896729649
+M3-4,plain transfer from M3-2,plain,M3-2,1.4472,464.71519086608237
+M3-4,raked transfer from M3-2,raked,M3-2,0.0,549.6692104290503
+M3-4,raked transfer from M3-2,raked,M3-2,0.0402,374.09539848180066
+M3-4,raked transfer from M3-2,raked,M3-2,0.0804,370.6252421267143
+M3-4,raked transfer from M3-2,raked,M3-2,0.1608,380.5685229955846
+M3-4,raked transfer from M3-2,raked,M3-2,0.2412,395.9401698831981
+M3-4,raked transfer from M3-2,raked,M3-2,0.12864,368.2722088745813
+M3-4,raked transfer from M3-2,raked,M3-2,0.35376,382.0227135183333
+M3-4,raked transfer from M3-2,raked,M3-2,0.51456,417.62576315973683
+M3-4,raked transfer from M3-2,raked,M3-2,2.0904,484.8504017088794
+M3-4,raked transfer from M3-2,raked,M3-2,0.7236,409.97727156400214
+M3-4,raked transfer from M3-2,raked,M3-2,1.4472,450.348717548579
+M3-4,raked transfer from M3-2,raked,M3-2,1.0452,416.8243411165722
+M3-1,plain transfer from M3-4,plain,M3-4,0.0,566.9182718625403
+M3-1,plain transfer from M3-4,plain,M3-4,0.01485,480.69303308563474
+M3-1,plain transfer from M3-4,plain,M3-4,0.007425,529.9771784781537
+M3-1,plain transfer from M3-4,plain,M3-4,0.0297,470.80973730586015
+M3-1,plain transfer from M3-4,plain,M3-4,0.04455,466.35037674521146
+M3-1,plain transfer from M3-4,plain,M3-4,0.09504000000000001,452.8955307343263
+M3-1,plain transfer from M3-4,plain,M3-4,0.023760000000000003,465.4174770148216
+M3-1,plain transfer from M3-4,plain,M3-4,0.13365,538.3558762484556
+M3-1,plain transfer from M3-4,plain,M3-4,0.06534000000000001,467.0152721519998
+M3-1,plain transfer from M3-4,plain,M3-4,0.3861,520.2327675118986
+M3-1,plain transfer from M3-4,plain,M3-4,0.19305,438.5699039996332
+M3-1,plain transfer from M3-4,plain,M3-4,0.2673,531.9455353021943
+M3-1,raked transfer from M3-4,raked,M3-4,0.0,566.9182718625403
+M3-1,raked transfer from M3-4,raked,M3-4,0.007425,534.4334333590476
+M3-1,raked transfer from M3-4,raked,M3-4,0.01485,487.39130296337225
+M3-1,raked transfer from M3-4,raked,M3-4,0.0297,464.9235213500141
+M3-1,raked transfer from M3-4,raked,M3-4,0.06534000000000001,462.5324902114587
+M3-1,raked transfer from M3-4,raked,M3-4,0.023760000000000003,465.4174770148216
+M3-1,raked transfer from M3-4,raked,M3-4,0.04455,466.35037674521146
+M3-1,raked transfer from M3-4,raked,M3-4,0.13365,547.1116136743725
+M3-1,raked transfer from M3-4,raked,M3-4,0.09504000000000001,458.5374277558985
+M3-1,raked transfer from M3-4,raked,M3-4,0.2673,518.7620116486974
+M3-1,raked transfer from M3-4,raked,M3-4,0.19305,453.30895864746327
+M3-1,raked transfer from M3-4,raked,M3-4,0.3861,530.5484800989663
+M3-1,plain transfer from M3-2,plain,M3-2,0.0,566.9182718625403
+M3-1,plain transfer from M3-2,plain,M3-2,0.007425,534.4334333590476
+M3-1,plain transfer from M3-2,plain,M3-2,0.0297,467.7381384119163
+M3-1,plain transfer from M3-2,plain,M3-2,0.01485,492.0697994414227
+M3-1,plain transfer from M3-2,plain,M3-2,0.023760000000000003,473.8821763140169
+M3-1,plain transfer from M3-2,plain,M3-2,0.06534000000000001,458.90528990443
+M3-1,plain transfer from M3-2,plain,M3-2,0.09504000000000001,459.25282807780246
+M3-1,plain transfer from M3-2,plain,M3-2,0.3861,551.8254571065927
+M3-1,plain transfer from M3-2,plain,M3-2,0.2673,524.0930365445083
+M3-1,plain transfer from M3-2,plain,M3-2,0.04455,462.4042358905504
+M3-1,plain transfer from M3-2,plain,M3-2,0.19305,519.5133720776107
+M3-1,plain transfer from M3-2,plain,M3-2,0.13365,544.3848940287119
+M3-1,raked transfer from M3-2,raked,M3-2,0.0,566.9182718625403
+M3-1,raked transfer from M3-2,raked,M3-2,0.007425,535.1173531915654
+M3-1,raked transfer from M3-2,raked,M3-2,0.023760000000000003,477.9366404795823
+M3-1,raked transfer from M3-2,raked,M3-2,0.01485,509.25494930431046
+M3-1,raked transfer from M3-2,raked,M3-2,0.0297,470.5148262929492
+M3-1,raked transfer from M3-2,raked,M3-2,0.04455,466.35037674521146
+M3-1,raked transfer from M3-2,raked,M3-2,0.06534000000000001,462.4042358905504
+M3-1,raked transfer from M3-2,raked,M3-2,0.09504000000000001,458.5303225840548
+M3-1,raked transfer from M3-2,raked,M3-2,0.19305,545.2775306375022
+M3-1,raked transfer from M3-2,raked,M3-2,0.3861,532.3423427952071
+M3-1,raked transfer from M3-2,raked,M3-2,0.13365,561.4271113327085
+M3-1,raked transfer from M3-2,raked,M3-2,0.2673,528.8054281393636
+M3-2,plain transfer from M3-4,plain,M3-4,0.0,600.9119438777496
+M3-2,plain transfer from M3-4,plain,M3-4,0.007325,530.2886302440479
+M3-2,plain transfer from M3-4,plain,M3-4,0.01465,490.3182249044565
+M3-2,plain transfer from M3-4,plain,M3-4,0.0293,483.9443064566525
+M3-2,plain transfer from M3-4,plain,M3-4,0.04395,480.69885032299385
+M3-2,plain transfer from M3-4,plain,M3-4,0.023440000000000003,477.9455017196851
+M3-2,plain transfer from M3-4,plain,M3-4,0.06446,464.86493931650614
+M3-2,plain transfer from M3-4,plain,M3-4,0.09376000000000001,472.4849965179496
+M3-2,plain transfer from M3-4,plain,M3-4,0.2637,434.4760320467237
+M3-2,plain transfer from M3-4,plain,M3-4,0.13185,427.0690410946763
+M3-2,plain transfer from M3-4,plain,M3-4,0.3809,465.4559740328618
+M3-2,plain transfer from M3-4,plain,M3-4,0.19045,422.4013098084449
+M3-2,raked transfer from M3-4,raked,M3-4,0.0,600.9119438777496
+M3-2,raked transfer from M3-4,raked,M3-4,0.007325,540.6989559077323
+M3-2,raked transfer from M3-4,raked,M3-4,0.01465,496.56690169590325
+M3-2,raked transfer from M3-4,raked,M3-4,0.023440000000000003,475.2540698993715
+M3-2,raked transfer from M3-4,raked,M3-4,0.0293,477.9455017196851
+M3-2,raked transfer from M3-4,raked,M3-4,0.09376000000000001,478.16627252014024
+M3-2,raked transfer from M3-4,raked,M3-4,0.04395,478.8055249505235
+M3-2,raked transfer from M3-4,raked,M3-4,0.3809,406.79180826521196
+M3-2,raked transfer from M3-4,raked,M3-4,0.2637,420.2853855775565
+M3-2,raked transfer from M3-4,raked,M3-4,0.06446,466.1907604047684
+M3-2,raked transfer from M3-4,raked,M3-4,0.19045,416.9242697377614
+M3-2,raked transfer from M3-4,raked,M3-4,0.13185,454.86006839006865
+M3-2,plain transfer from M3-1,plain,M3-1,0.0,600.9119438777496
+M3-2,plain transfer from M3-1,plain,M3-1,0.007325,563.6501607621633
+M3-2,plain transfer from M3-1,plain,M3-1,0.04395,464.8601037024717
+M3-2,plain transfer from M3-1,plain,M3-1,0.023440000000000003,485.0860357071298
+M3-2,plain transfer from M3-1,plain,M3-1,0.01465,500.10793997598137
+M3-2,plain transfer from M3-1,plain,M3-1,0.0293,476.0241509606725
+M3-2,plain transfer from M3-1,plain,M3-1,0.06446,462.01315587945527
+M3-2,plain transfer from M3-1,plain,M3-1,0.09376000000000001,434.555017996482
+M3-2,plain transfer from M3-1,plain,M3-1,0.2637,427.7797012440759
+M3-2,plain transfer from M3-1,plain,M3-1,0.3809,414.70892997324756
+M3-2,plain transfer from M3-1,plain,M3-1,0.19045,417.71596229037544
+M3-2,plain transfer from M3-1,plain,M3-1,0.13185,419.74756920425926
+M3-2,raked transfer from M3-1,raked,M3-1,0.0,600.9119438777496
+M3-2,raked transfer from M3-1,raked,M3-1,0.0293,479.4532846901231
+M3-2,raked transfer from M3-1,raked,M3-1,0.01465,502.8025765117377
+M3-2,raked transfer from M3-1,raked,M3-1,0.023440000000000003,487.88772224436644
+M3-2,raked transfer from M3-1,raked,M3-1,0.007325,561.4677786654007
+M3-2,raked transfer from M3-1,raked,M3-1,0.04395,462.0584010717101
+M3-2,raked transfer from M3-1,raked,M3-1,0.06446,448.46294091464665
+M3-2,raked transfer from M3-1,raked,M3-1,0.19045,391.7395982943278
+M3-2,raked transfer from M3-1,raked,M3-1,0.09376000000000001,414.4847419685351
+M3-2,raked transfer from M3-1,raked,M3-1,0.13185,404.1337572159116
+M3-2,raked transfer from M3-1,raked,M3-1,0.3809,466.897649831167
+M3-2,raked transfer from M3-1,raked,M3-1,0.2637,379.97112283884223

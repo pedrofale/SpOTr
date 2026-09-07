@@ -1,0 +1,289 @@
+target,arm,source,ncomp,shuffled,w,err
+M3-4,FGW (no transfer),None,1,False,0.0,549.6692104290503
+M3-4,FGW (no transfer),None,1,False,0.0804,375.4908824541281
+M3-4,FGW (no transfer),None,1,False,0.0402,364.92059121258785
+M3-4,FGW (no transfer),None,1,False,0.12864,360.684259156551
+M3-4,FGW (no transfer),None,1,False,0.2412,434.43648968492283
+M3-4,FGW (no transfer),None,1,False,0.51456,465.43263847483297
+M3-4,FGW (no transfer),None,1,False,0.35376,434.3310327772443
+M3-4,FGW (no transfer),None,1,False,0.1608,355.905985387107
+M3-4,FGW (no transfer),None,1,False,1.4472,504.1647005814427
+M3-4,FGW (no transfer),None,1,False,0.7236,487.76859890359975
+M3-4,FGW (no transfer),None,1,False,2.0904,516.8935092895742
+M3-4,FGW (no transfer),None,1,False,1.0452,479.80974014483513
+M3-1,FGW (no transfer),None,1,False,0.0,566.9182718625403
+M3-1,FGW (no transfer),None,1,False,0.007425,491.73503139696345
+M3-1,FGW (no transfer),None,1,False,0.01485,453.89559720011437
+M3-1,FGW (no transfer),None,1,False,0.04455,469.247396057095
+M3-1,FGW (no transfer),None,1,False,0.09504000000000001,586.6366181740372
+M3-1,FGW (no transfer),None,1,False,0.06534000000000001,496.84567119566816
+M3-1,FGW (no transfer),None,1,False,0.13365,548.9229590362577
+M3-1,FGW (no transfer),None,1,False,0.0297,410.6630269146307
+M3-1,FGW (no transfer),None,1,False,0.19305,571.4345977478991
+M3-1,FGW (no transfer),None,1,False,0.023760000000000003,462.4042358905504
+M3-1,FGW (no transfer),None,1,False,0.2673,610.9200981806351
+M3-1,FGW (no transfer),None,1,False,0.3861,599.3550736937698
+M3-2,FGW (no transfer),None,1,False,0.0,600.9119438777496
+M3-2,FGW (no transfer),None,1,False,0.007325,490.348666675935
+M3-2,FGW (no transfer),None,1,False,0.01465,455.8684181945286
+M3-2,FGW (no transfer),None,1,False,0.04395,439.28965444070735
+M3-2,FGW (no transfer),None,1,False,0.0293,422.4013098084449
+M3-2,FGW (no transfer),None,1,False,0.023440000000000003,423.31190885430806
+M3-2,FGW (no transfer),None,1,False,0.13185,564.8400636180971
+M3-2,FGW (no transfer),None,1,False,0.19045,564.8400636180971
+M3-2,FGW (no transfer),None,1,False,0.2637,580.9226765688597
+M3-2,FGW (no transfer),None,1,False,0.09376000000000001,548.5141039487523
+M3-2,FGW (no transfer),None,1,False,0.3809,550.5263708799554
+M3-2,FGW (no transfer),None,1,False,0.06446,427.102805233037
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.0,549.6692104290503
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.0402,378.3067986340003
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.12864,374.2037690438223
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.0804,367.4807377988992
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.7236,417.1764146117998
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.1608,374.2037690438223
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.2412,412.2989322364035
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.51456,387.4842382425828
+M3-4,learned rank 2 from M3-1,M3-1,2,False,1.0452,457.9817762998934
+M3-4,learned rank 2 from M3-1,M3-1,2,False,0.35376,401.94307071082653
+M3-4,learned rank 2 from M3-1,M3-1,2,False,2.0904,461.3405057289096
+M3-4,learned rank 2 from M3-1,M3-1,2,False,1.4472,455.93838237347956
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.0,549.6692104290503
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.0402,378.543147705186
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.0804,367.3320209537309
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.12864,375.8943295763218
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.35376,399.64769128185145
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.51456,399.1110803261407
+M3-4,learned rank 3 from M3-1,M3-1,3,False,1.0452,441.4964307300842
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.1608,378.275461833035
+M3-4,learned rank 3 from M3-1,M3-1,3,False,1.4472,448.2056529462963
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.2412,409.2774826294325
+M3-4,learned rank 3 from M3-1,M3-1,3,False,0.7236,457.1887890434638
+M3-4,learned rank 3 from M3-1,M3-1,3,False,2.0904,440.2207846445594
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.0,549.6692104290503
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.0402,376.28163189194066
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.0804,374.93844495158396
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.12864,375.8943295763218
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.7236,412.50100418291225
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.1608,376.28163189194066
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.51456,435.9175694903151
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.2412,396.598553742515
+M3-4,learned rank 2 from M3-2,M3-2,2,False,0.35376,396.5823446281783
+M3-4,learned rank 2 from M3-2,M3-2,2,False,2.0904,459.9871928367981
+M3-4,learned rank 2 from M3-2,M3-2,2,False,1.4472,447.00083611627804
+M3-4,learned rank 2 from M3-2,M3-2,2,False,1.0452,444.7163722160029
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.0,549.6692104290503
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.12864,373.9777721626223
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.0804,370.63239101908454
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.0402,378.543147705186
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.51456,423.99179923409315
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.35376,393.1010780386689
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.2412,404.41554136220736
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.1608,375.1913540116492
+M3-4,learned rank 3 from M3-2,M3-2,3,False,1.0452,431.88658936104173
+M3-4,learned rank 3 from M3-2,M3-2,3,False,1.4472,433.7235934855062
+M3-4,learned rank 3 from M3-2,M3-2,3,False,0.7236,436.9661314420294
+M3-4,learned rank 3 from M3-2,M3-2,3,False,2.0904,442.84840146933874
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.0,549.6692104290503
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.0402,375.5992735616979
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.2412,409.2030773347484
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.0804,367.3320209537309
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.12864,375.5992735616979
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.35376,378.10564770432114
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,1.4472,440.1295089347588
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.51456,382.5413944077594
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,2.0904,450.8209208183006
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.1608,404.41554136220736
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,0.7236,384.59810792052576
+M3-4,learned rank 2 from BOTH others,"['M3-1', 'M3-2']",2,False,1.0452,452.98071098398566
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.0,549.6692104290503
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.0402,375.65256342761137
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.12864,372.3474139810325
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.0804,365.3525275856788
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.2412,376.28163189194066
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.35376,377.6302083326784
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.1608,392.2414282657306
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,2.0904,432.1865526465346
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,1.4472,442.2676885004874
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.51456,396.13805382991455
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,1.0452,450.0537658105662
+M3-4,learned rank 3 from BOTH others,"['M3-1', 'M3-2']",3,False,0.7236,431.6584744622441
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.0,549.6692104290503
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.12864,549.7305098975619
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.0402,549.6265893649601
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.0804,550.95511139833
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.2412,547.9869600799947
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.35376,546.8649098159862
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.1608,548.8248610315026
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.51456,544.503306392308
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,0.7236,545.7550064072494
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,1.4472,542.3215395702025
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,1.0452,546.9136629194539
+M3-4,SHUFFLED control,"['M3-1', 'M3-2']",3,True,2.0904,537.7526758359394
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.0,566.9182718625403
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.007425,532.5528858429758
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.023760000000000003,466.1554097966665
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.01485,480.8846878151591
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.04455,466.35037674521146
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.0297,464.9235213500141
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.09504000000000001,426.1739600753171
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.06534000000000001,448.18437518258116
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.2673,521.2417866911454
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.13365,488.9588237305774
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.3861,514.74319812152
+M3-1,learned rank 2 from M3-4,M3-4,2,False,0.19305,424.79341985007295
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.0,566.9182718625403
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.007425,531.4433179704502
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.01485,480.69303308563474
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.023760000000000003,467.7381384119163
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.04455,458.07337170715124
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.0297,465.4174770148216
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.06534000000000001,430.4587902391625
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.3861,516.0167154554464
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.09504000000000001,415.059558896245
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.13365,483.9377661878234
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.2673,507.62965321851885
+M3-1,learned rank 3 from M3-4,M3-4,3,False,0.19305,426.95200455905535
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.0,566.9182718625403
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.007425,535.0970005645144
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.0297,464.9235213500141
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.01485,487.39130296337225
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.023760000000000003,470.80973730586015
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.06534000000000001,448.18437518258116
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.09504000000000001,426.478303752933
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.04455,457.18758869853514
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.13365,516.7801773163189
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.3861,542.5483062506976
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.2673,541.0540526302773
+M3-1,learned rank 2 from M3-2,M3-2,2,False,0.19305,544.7878173340983
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.0,566.9182718625403
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.007425,534.4334333590476
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.01485,490.1228332812454
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.0297,461.6424587717407
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.023760000000000003,467.49099395485314
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.04455,460.7674232279685
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.09504000000000001,426.40929181821383
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.06534000000000001,448.19708273799245
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.19305,529.2418572973279
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.3861,533.8254885827299
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.13365,522.6374992916475
+M3-1,learned rank 3 from M3-2,M3-2,3,False,0.2673,509.3693263273194
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.0,566.9182718625403
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.007425,534.4334333590476
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.01485,480.8846878151591
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.023760000000000003,466.35037674521146
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.0297,467.49099395485314
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.04455,470.5148262929492
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.13365,497.9816602901131
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.19305,509.3693263273194
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.09504000000000001,420.5322252450674
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.3861,528.7055779542543
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.06534000000000001,447.27968745900927
+M3-1,learned rank 2 from BOTH others,"['M3-4', 'M3-2']",2,False,0.2673,441.03327502115144
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.0,566.9182718625403
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.007425,534.2813216036063
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.01485,480.69303308563474
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.023760000000000003,467.8102485525363
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.04455,460.8299482354412
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.0297,467.8102485525363
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.06534000000000001,437.88654489631017
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.09504000000000001,423.4450839611241
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.3861,521.2002897677634
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.13365,509.3693263273194
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.2673,421.61435896844137
+M3-1,learned rank 3 from BOTH others,"['M3-4', 'M3-2']",3,False,0.19305,411.2371918714876
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.0,566.9182718625403
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.01485,567.5492650423387
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.007425,567.5492650423387
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.0297,566.9182718625403
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.023760000000000003,566.9182718625403
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.04455,566.6348321107079
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.06534000000000001,561.4271113327085
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.09504000000000001,561.4271113327085
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.13365,558.4180433514737
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.19305,558.4180433514737
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.2673,557.9341783676412
+M3-1,SHUFFLED control,"['M3-4', 'M3-2']",3,True,0.3861,558.4180433514737
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.0,600.9119438777496
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.007325,528.3452956553223
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.01465,485.0860357071298
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.0293,475.2540698993715
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.023440000000000003,472.4849965179496
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.04395,478.16627252014024
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.06446,472.4849965179496
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.3809,429.7569262059759
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.09376000000000001,442.70542393963547
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.2637,462.4620483829751
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.19045,437.5837580047037
+M3-2,learned rank 2 from M3-4,M3-4,2,False,0.13185,407.70094475106845
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.0,600.9119438777496
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.007325,530.2886302440479
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.04395,480.69885032299385
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.023440000000000003,477.9455017196851
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.01465,489.27379825631186
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.0293,480.69885032299385
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.19045,418.75993758509185
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.06446,454.86006839006865
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.09376000000000001,449.62040933075934
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.3809,460.9448153443032
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.13185,453.84531986429994
+M3-2,learned rank 3 from M3-4,M3-4,3,False,0.2637,454.67096860702236
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.0,600.9119438777496
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.007325,562.3706017978092
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.023440000000000003,487.61464189367877
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.01465,505.0633662344079
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.0293,477.6477018086094
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.09376000000000001,419.74756920425926
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.04395,466.7908136203575
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.06446,449.2197239503668
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.3809,462.96601660923767
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.19045,434.4760320467237
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.13185,406.56607855786274
+M3-2,learned rank 2 from M3-1,M3-1,2,False,0.2637,414.4847419685351
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.0,600.9119438777496
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.007325,563.6501607621633
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.01465,512.2608894364078
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.09376000000000001,424.5566312773218
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.023440000000000003,487.83908587801653
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.0293,472.4849965179496
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.06446,451.62543170022104
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.04395,470.67186100616783
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.19045,402.2952284566508
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.2637,442.3503517656758
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.3809,475.31144652428685
+M3-2,learned rank 3 from M3-1,M3-1,3,False,0.13185,406.53225143452903
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.0,600.9119438777496
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.007325,540.3623242677373
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.01465,492.1228183266379
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.04395,478.8055249505235
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.0293,477.6477018086094
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.023440000000000003,472.4849965179496
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.09376000000000001,455.8684181945286
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.06446,463.1181937496228
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.13185,402.2952284566508
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.19045,425.5154297736205
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.3809,427.102805233037
+M3-2,learned rank 2 from BOTH others,"['M3-4', 'M3-1']",2,False,0.2637,450.2427034505162
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.0,600.9119438777496
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.007325,539.8854431686817
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.01465,489.45559299745645
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.04395,483.9443064566525
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.023440000000000003,466.1907604047684
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.06446,458.58988812466407
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.09376000000000001,453.84531986429994
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.0293,464.86493931650614
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.19045,428.8465047161791
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.13185,406.79180826521196
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.2637,442.70542393963547
+M3-2,learned rank 3 from BOTH others,"['M3-4', 'M3-1']",3,False,0.3809,458.4959842872083
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.0,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.007325,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.01465,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.023440000000000003,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.0293,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.04395,600.9119438777496
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.2637,589.0915631267495
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.3809,597.0999268977713
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.19045,597.0999268977713
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.13185,597.0999268977713
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.06446,600.291039909714
+M3-2,SHUFFLED control,"['M3-4', 'M3-1']",3,True,0.09376000000000001,598.7948627086142

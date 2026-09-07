@@ -1,0 +1,328 @@
+\documentclass{article}
+
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{xurl}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}
+\usepackage{amsmath}
+% For algorithms
+\usepackage[ruled]{algorithm2e}
+% For figures
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titling}
+\usepackage{xr}
+\usepackage{cleveref}
+\usepackage{rotating}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\RR}{\mathbb{R}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\toolname}{SpOTr}
+\newcommand{\toolnamex}{SpOTr }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Tree and space-aware optimal transport for single-cell and spatial transcriptomics data integration}
+\author{
+  Pedro F.~Ferreira$^{1,2,3}$,\; Oskar Kviman$^{1,2}$,\; Jens Lagergren$^{1,2}$
+}
+\date{}
+\date{\vspace{-5ex}}
+ 
+\begin{document}
+\maketitle
+
+\begin{affiliations}
+ \item $^1$KTH Royal Institute of Technology
+ \item $^2$Science for Life Laboratory
+ \item $^3$Karolinska Institutet
+\end{affiliations}
+
+\vspace{.5cm}
+
+\begin{abstract}
+The spatial organization of evolving cell populations in tumors influences how they progress and respond to treatment. Spatially-resolved transcriptomics data may be used to examine the locations of these diverse cell states in tumor sections. However, these technologies often lack single-cell resolution and instead capture groups of cells in spatial spots, making it difficult to obtain accurate clonal identities and build phylogenetic trees. In contrast, full-length single-cell transcriptomics data are better suited to obtain cell lineages but do not capture their spatial locations in tissue. We present \toolname, an optimal transport and statistical model designed to quantify the concordance between the evolutionary tree and the spatial distribution of cancer cells by integrating single-cell and spatial transcriptomics data from tumors. \toolnamex uses Fused Gromov-Wasserstein optimal transport to leverage the tree-based cell distances from one modality and spatial neighborhoods from the other to map single cells to spatial locations. The method learns clone-specific concordances with spatial structure, which can be used to investigate lineage-specific zonation patterns. We validate \toolnamex on simulated and real spatial lineage tracing data from a mouse model of breast cancer lung metastasis and show that it recovers spatial locations of subclones better than alternative methods that ignore the tree structure. On real data from a breast cancer sample, \toolnamex identifies ...
+\end{abstract}
+
+\section*{Introduction}
+\label{sec:introduction}
+Intra-tumor heterogeneity is a hallmark of cancer~\cite{marusyk2012intra} and one of the main causes for treatment failure~\cite{marusyk2020intratumor}. Cancer cells often acquire genomic aberrations as they divide, resulting in subclones of cells with distinct genotypes that may result in distinct cell states~\cite{nam2021integrating, whiting2024phenotypic}. The interactions between these cells and the surrounding tissue further contribute to the emergence of novel phenotypes and the formation of a complex tumor microenvironment~\cite{de2023evolving}. The physical constraints imposed by the spatial structure of the tumor create growth patterns that shape its evolutionary dynamics and the localization patterns of subclones~\cite{lomakin2022spatial, noble2022spatial}. However, the level at which different subclones obtain distinct phenotypes that drive tumor growth is still unclear~\cite{salehi2021clonal, koblan2025high}. To address this question, the gene expression of cancer subclones must be analyzed in the context of their spatial locations in the tumor.
+
+Recent technological advances have enabled researchers to study intra-tumor heterogeneity in its spatial context through spatially-resolved transcriptomics (SRT)~\cite{staahl2016visualization, chen2024spatial}. These technologies quantify gene expression in two-dimensional sections of tumors, allowing insights into the spatial distribution of cancer cell states~\cite{barkley2022cancer}, subclones~\cite{erickson2022spatially}, and their interactions with the microenvironment~\cite{liu2025conserved}. Different SRT protocols exist, with trade-offs between cellular and transcriptomic resolution~\cite{tian2023expanding}. Notably, the widely available Visium CytAssist platform relies on spots that contain up to 10 cells, which makes it difficult to identify high-resolution cell states and subclones by itself~\cite{janesick2023high}.
+
+To address these limitations, researchers have developed computational methods to associate single-cell RNA-sequencing (scRNA-seq) and spot-based SRT data from the same tissue to map highly-resolved cell states to their spatial locations~\cite{nguyen2024scdot, lopez2022destvi, kleshchevnikov2022cell2location}. These methods employ the assumption that dissociated cells profiled with scRNA-seq can be assigned to spatial locations of spots that contain cells with similar gene expression profiles. All of these methods rely on spot deconvolution, where the gene expression of each spot is modelled as a mixture of cell types that can either be jointly or independently identified from scRNA-seq data. However, due to the unclear relationship between subclonal identities and their phenotypes, these methods may match gene expression profiles across technologies that do not correspond to matched subclonal identities, preventing an accurate study of spatial evolution. While it is notoriously difficult to obtain single-cell genotypes from scRNA-seq data~\cite{fan2020single}, researchers have developed methods to leverage full-length scRNA-seq data such as SMART-seq3 to build phylogenetic trees based on single-nucleotide variants (SNVs)~\cite{zhou2020dendro, zimmermann2025phylogenetic}, or to map single-cell transcriptomes to trees inferred from scDNA-seq data~\cite{campbell2019clonealign, ferreira2022mapping} .
+
+Alternatively, attempts have been made to identify subclones from SRT data by inferring copy number aberrations (CNA)~\cite{ma2024inferring, erickson2022spatially, elyanow2021starch}, using the assumption that cells from the same subclone will tend to have similar spatial locations and that the gene expression of spots correlates with the CNA profiles of the subclones therein. When bulk DNA-seq data is available, SNVs may be identified and mapped to spots using their mutation read counts~\cite{shafighi2024integrative}. However, these methods ignore the observation that cancer cells may have variable levels of agreement between their subclonal identities and their phenotypes, as well as different spatial structures, which limits their ability to profile spatial tumor evolution~\cite{whiting2024phenotypic, schiffman2024defining}. 
+
+Here, we present \toolname, an optimal transport and spot deconvolution approach to map full-length scRNA-seq data to spot-based SRT and identify global and subclone-specific spatial concordances. \toolnamex uses a phylogenetic tree matched with single-cell gene expression profiles to find the locations of subclones in a tumor section and quantifies the level of concordance between their cell-cell distances in the phylogenetic tree with their spot-spot distances in the 2D section. \toolnamex learns subclone-specific concordances between the tree structure and the spatial organization of cells, which enables the detection of differential spatial motility  (Figure~\ref{fig:overview}).
+
+In the following sections, we first provide an overview of \toolname. On simulated data, we show how the joint tree-informed mapping and deconvolution approach of \toolnamex leads to accurate subclone-to-spot assignments in comparison to methods which rely only on gene expression similarities across modalities. We then analyze data from a real spatial lineage tracing experiment of a mouse lung metastasis\cite{koblan2025high} that provides us with a real ground truth that we can use to evaluate the quality of the \toolnamex results.
+
+\section*{Results}
+\label{sec:results}
+\subsection*{Method overview}
+\label{sec:overview}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/overview.pdf}
+    \caption{\toolnamex overview. \toolnamex takes as input scRNA-seq and ST data. From the scRNA-seq data, it requires a corresponding phylogenetic tree from which cell-cell distances $C^T$ may be built, as well as subclonal assignments $Z$ and signatures $W$. The method defines a novel FGW OT cost that balances the importance of the gene expression data with the tree and spatial distance matrices, and uses a spot deconvolution statistical model to learn all the parameters with gradient descent. The parameters $\theta$ learned by \toolnamex may be interpreted as clade-specific spatial concordance scores, which in combination with the cell-spot mapping, may be used to describe the spatial localization patterns of different cancer subclones.}
+    \label{fig:overview}
+\end{figure}
+
+\toolnamex takes as input scRNA-seq data, a phylogenetic tree relating its cells and ST data from the same tissue. To associate the two modalities, \toolnamex uses the similarities between the gene expression profiles of cells and spots and, crucially, the cell-to-cell distances in the phylogenetic tree and the spot-to-spot distances in the spatial section. The main assumption supporting \toolnamex is that cells which are closely related in their evolutionary history are more likely to be physically close in space. \toolnamex formulates the mapping task as an optimal transport (OT)~\cite{peyre_computational_2020} problem with a Fused Gromov-Wasserstein (FGW)~\cite{vayer2018fused} cost function that trades off the gene expression and the structural (tree and space) similarities between the two modalities. To account for different levels of structural concordance across subclones, we develop clade-aware FGW, which uses a masking matrix to build an FGW cost matrix with decomposed structural terms that can be used with the efficient Sinkhorn algorithm~\cite{cuturi_sinkhorn_2013} to learn the optimal cell-spot mapping (Methods).
+
+The FGW problem includes the hyperparameter $\alpha$ that indicates how much to rely on each term. Typically, this value is set via cross-validation on held-out data with some metric to evaluate the quality of the resulting optimal transport mapping. However, it is unclear which metric to use in the absence of the true cell-spot assignments, which are unknown in general. Therefore, we take the alternative approach of optimizing $\alpha$ by gradient descent on the spot deconvolution objective. Specifically, we formulate a likelihood function for the spot-based gene expression data as a mixture of subclonal CNA profiles obtained from the scRNA-seq data. We apply the same principle for the clade-aware FGW OT problem, where we learn $\alpha$ for each clade in the phylogeny, as well as additional parameters $\theta$ that decompose the clade contribution into . 
+
+\toolnamex takes a user-defined set of subclones and uses gradient descent to learn a cell-spot mapping $\gamma$, a global $\alpha$ value, and clade-specific contributions $\theta$ for the specified subclones. By leveraging the cell lineages and spot spatial locations, the resulting cell-spot mappings can be used to identify the spatial locations of different subclones. Crucially, \toolnamex may be used to detect which clades have a strong structural concordance between their evolutionary relationships and spatial locations, and which do not. These results may guide downstream analysis of the spatial locations of subclones (Figure~\ref{fig:overview}). 
+
+\subsection*{Simulation study}
+\label{sec:simulation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/benchmark.pdf}
+    \caption{Benchmarking study on simulated data. (A) For a fixed cell lineage tree, considered 4 distinct subclones, and sampled the locations of all cells in 2D space using a Brownian Motion model with different parameters, resulting in four distinct spatial simulation modes. The cells are colored by subclone. (B) We generated single-cell gene expression profiles by considering two distinct models: one in which the gene expression is entirely driven by the tree structure, and another where the tree-based signal is mixed with an external signal with independent spatial structure, which we used to simulate scRNA-seq and ST data. (C) For each combination of simulation modes, we compared \toolnamex with baseline OT and state-of-the-art spot deconvolution methods by computing the Pearson correlation coefficients between simulated and estimated subclone proportions for individual subclones across locations, and taking the average across subclones.
+    }
+    \label{fig:simulations}
+\end{figure}
+
+
+We assess the ability of \toolnamex to find the true cell-spot mappings in a simulation setting where we consider different levels of tree-space concordance for different clades, as well as variable levels of specificity in subclonal gene expression profiles. Specifically, we generate a balanced binary tree of 1024 cells and simulate their spatial locations on the plane using a two-dimensional Brownian Motion (BM) model on the tree, which tends to place cells from the same clade in close proximity, depending on the parameterization of the BM (Methods). We consider three clade levels, 0 to 2, where level 0 corresponds to the root with only one clade, i.e., the whole tree. At level 1, there are two clades, and at level 2 there are four clades. In the following, we refer to the level 1 clades as clones and the level 2 clades as subclones. We parameterize the spatial BM to capture four different spatial modes (\Cref{fig:simulations} A):
+\begin{enumerate}
+    \item strong clonal structure, where cells from the two level 1 clades separate in space, but the subclones within each one are mixed;
+    \item mixed clonal and subclonal structure, where cells from the two clones separate in space, and only the subclones in one of the clones also separate, with the other clone having no subclonal spatial structure;
+    \item strong subclonal structure, where cells from all the subclones separate in space;
+    \item no structure, where cells from all subclones are randomly distributed in space.
+\end{enumerate}
+
+We then generate single-cell gene expression profiles for 500 genes by combining a tree-based signal with tree-independent external factors. Specifically, we first define 5 gene expression signatures and simulate their single-cell activations using a 5-dimensional BM on the tree. We then create another gene expression program that is activated independently of the tree, but rather based on tissue coordinates (Methods). We sample gene expression profiles for single cells by combining the two terms, and consider three cases: tree-based signal only, external-signal only, or equally weighted tree and external signal (\Cref{fig:simulations} B).
+
+From these spatially-resolved single-cell gene expression profiles, we simulate scRNA-seq UMI counts with a Poisson observation model (Methods). To simulate spot-based data, we first place a grid of spots in the simulated 2D plane, such that each non-empty spot contains between 1-10 cells, i.e. corresponding to a spot size of about 50$\mu m$, as in the Visium platform~\cite{janesick2023high}. We assign cells to spots based on spatial proximity, and take the average gene expression profiles of the cells assigned to each spot to obtain per-spot gene expression. The total number of spots that overlap with cells varies between and across data sets. We then simulate spot-based UMI counts using another Poisson model (Methods). 
+
+To evaluate \toolnamex on these simulations, we compute the average Pearson correlation of estimated subclone proportions across spots compared to the simulated ground truth (Methods). We compare \toolnamex with two other simple OT baselines consisting of Wasserstein OT (gene expression only) and Gromov-Wasserstein OT (structure only), which correspond to edge cases of \toolname. We also include two state-of-the-art deconvolution methods, DestVI\cite{lopez2022destvi} and scDOT~\cite{nguyen2024scdot} as alternative scRNA-seq and SRT data integration methods (\Cref{fig:simulations} C). These methods require cell type annotations for the scRNA-seq data, and scDOT additionally -- similarly to \toolnamex -- requires marker genes for those cell types. We set the input cell type annotations as the subclone annotations, and the marker genes as the differentially expressed genes between subclones. While the details differ, in general all three methods, DestVI, scDOT and \toolname, aim to explain the spot data through mixtures of subclonal gene programs.
+
+We consider each spatial simulation mode separately. 
+
+% discuss results
+
+\subsection*{Synthetic real data study}
+\label{sec:real}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{figures/mouse.pdf}
+    \caption{Application to real spatial lineage tracing data. (A) }
+    \label{fig:petracer}
+\end{figure}
+
+
+We next ran \toolnamex on single-cell gene expression data with both ground truth spatial locations as well as a phylogeny from a recently developed lineage tracing system, PETracer, applied to a mouse model of breast cancer lung metastasis~\cite{koblan2025high}. The authors used MERFISH imaging on a 175-gene panel to profile the gene expression of single cells in their spatial locations on tumor slices and built a phylogenetic tree using their cell barcode editing system. They identified four gene expression modules in the cancer cells with strong spatial structure, but with low clade-specificity, indicating high transcriptional plasticity of the cancer cells, and showed that some clades have higher spatial coherence than others.
+
+We created a modified version of this data set, where we simulated spot-based SRT data from the MERFISH data by first overlaying a grid of spots on the tumor slice, assigning cells to spots based on their spatial proximities, and averaging the gene expression measurements of the cells in each simulated spot to obtain spot gene expression profiles. We then applied \toolnamex to this pseudo-real data set and used the ground truth cell-spot assignments to evaluate the integration performance (Methods). 
+
+\subsection*{Real breast cancer data}
+We used \toolnamex to integrate single-cell SS3 and spot-based Visium data from a patient breast cancer sample to discover the spatial location of subclones and their cell states by spot deconvolution. We first sought to identify cancer subclones from the single-cell data and reconstruct their evolutionary history that we could use as input to \toolnamex. The single-cell data consisted of a mixture of cancer cells and microenvironment cells (Figure~\ref{}), which enabled approximate copy number calling with inferCNV~\cite{patel2014single} using the healthy cells as reference (Figure~\ref{}). We clustered these CNA profiles to obtain 5 subclones and used SCICoNE to learn an evolutionary tree relating these subclones (Figure~\ref{}). We also applied inferCNV to the ST data, and found that the CNA profiles were consistent with the ones from the single-cell data, even though the subclonal correspondences were unclear, possibly due to spots with cancer cells containing multiple subclones or microenvironment cells (Figure~\ref{}). 
+We applied \toolnamex to map single-cells to spots using our FGW scheme using spot CNA subclonal deconvolution as objective function and using our fast clone-based multiscale implementation (Methods). inferCNV
+
+
+
+
+\section*{Discussion}
+\label{sec:discussion}
+
+A global understanding of tumor progression requires the ability to relate the evolutionary history of cancer cells with their spatial organization. In the absence of technologies that enable the reconstruction of phylogenetic trees of cells from somatic mutations while retaining their spatial context, we must integrate data from protocols that enable either one characterization or the other. Here we developed a novel approach to map scRNA-seq to SRT data that leverages the observation that related cells tend to occupy neighboring spatial locations in tumors. To do this, the extent to which the tree and spatial locations agree, as well as the contribution from different parts of the tree, must be chosen. Our algorithm uses a data-driven approach to make this choice by incorporating the mapping problem in an observation model for the spot-based gene expression data.
+
+The benchmarking study demonstrates the power of using the single-cell phylogeny to provide accurate data integration when the spatial organization of cancer cells is related to their evolutionary history. In general, this will be the case for most solid tumors. The real data application leverages unique mouse model with ground truth mappings that highlights the ability of \toolnamex to detect how different tumor subclones organize in space.
+
+Our simulation framework relies on a BM model on the tree for spatial evolution, but recently more appropriate stochastic processes such as the Symmetric Displacement (SD) model have been proposed, and we plan to incorporate 
+
+Our method relies on a phylogenetic tree relating the single-cells profiled with scRNA-seq. While there have been methods developed to build such trees
+
+As SRT technologies mature towards achieving single-cell resolution at the same quality of dissociated scRNA-seq, we envision the ability to learn tumor phylogenetic trees directly from those data. In those situations, we could in principle learn the concordance between tree and spatial structure directly. Nevertheless, we expect that researchers will continue producing unmatched dissociated scRNA-seq and SRT data that must be integrated. We envision a Bayesian extension of \toolnamex to include a prior distribution over the structural concordance term of the FGW problem given by the tree inferred from the SRT data, which might be updated with the tree available for the scRNA-seq data.
+
+Other methods have used optimal transport but they have not included a term for the concordance between tree and space. Moslin used FGW to use tree-tree distances. Additionally, it relied on external ground-truth associations to select the optimal weight for the structural term in the FGW kernel. 
+
+In summary, we propose the first scRNA-seq and SRT integration method that leverages similarities between a tumor phylogenetic tree and spatial locations, considers subclone-specific structural concordances, and uses a spot deconvolution statistical model to automatically learn the weight of the structural term in FGW optimal transport. \toolnamex will enable researchers to characterize the spatial cancer biology from their own data sets. 
+
+
+\section*{Methods}
+\label{sec:methods}
+\subsection*{Optimal transport scheme}
+\toolnamex combines FGW OT and a statistical deconvolution model to associate single-cell gene expression data (scRNA-seq) with spot-based spatial transcriptomics (ST) from the same tissue. Let $Y_{mg}$ be the expression of gene $g \in \{1,...,G\}$ in spot $m \in \{1,...,M\}$ in the ST data, where $G$ is the total number of genes, and $M$ is the total number of spots, for which there are also spatial coordinates $S_{m}$. Each spot $m$ captures the average expression of 5–10 neighboring cells, as in the Visium ST platform~\cite{stahl_visualization_2016}. Additionally, let $X_{ng}$ denote the expression of gene $g$ in cell $n \in \{1,...,N\}$ in the scRNA-seq data, where $N$ is the total number of cells in the data. When mutations are available on the scRNA-seq data, a phylogenetic tree $T$ containing the evolutionary relationship between the $N$ cells may also be obtained. As both technologies are destructive, the same cells are not present in both modalities. However, if they are obtained from the same tissue, clonal populations in one modality are expected to be present in the other. Therefore, we wish to find the mapping $\gamma = (\gamma_{nm})_{n=1:N;\; m=1:M}$ that associates each cell $n$ in the scRNA-seq data with each spot $m$ in the ST data, such that we can augment the scRNA-seq data with the spatial structure given by the ST data.
+
+The mapping $\gamma$ may be obtained via OT~\cite{peyre_computational_2020}. In OT, we are interested in the mapping that minimizes the average distance between pairs of data points from each modality. Specifically, let $C_{nm}$ denote the cost of mapping cell $n$ to spot $m$, and let $q_X$ and $q_Y$ denote the marginal distributions over cells and spots, respectively. Then, the optimal mapping $\gamma^*$ is obtained as
+\begin{equation}
+\label{eq:ot}
+    \gamma^* = \operatorname*{argmin}_{ \Gamma(q_X, q_Y)}\, 
+    \sum_{n=1}^N \sum_{m=1}^M C_{nm}\gamma_{nm}.
+\end{equation}
+
+Typically, one considers the OT problem in feature space, setting the cost matrix $C=C^F$ as the distance between the expression profiles of cells in the scRNA-seq data and the expression profiles of spots in the ST data, which may be obtained as the Euclidean distance on normalized expression data or on lower-dimensional representations~\cite{bunne2024optimal}. This formulation is based on the assumption that the gene expression of the spots in the ST data will be similar to the gene expression of the corresponding cells in the scRNA-seq data. However, this basic assumption may be challenged by both technical and biological confounders. On the one hand, differences in transcript detection sensitivity between technologies contribute to technical batch effects. On the other hand, cells from different clones may have similar gene expression profiles, which may lead to incorrect mappings of clones to spatial locations.
+
+To address these confounding factors, we leverage the observation that cells which are closely related evolutionarily are more likely to be in spatial proximity to each other than to cells which are evolutionarily distant. Therefore, we make use of a phylogenetic tree from the scRNA-seq data, $T$, and the spatial spot coordinates from the ST data, $S$, and posit that the optimal mapping $\gamma^*$ must additionally minimize the pairwise distances between cells in $T$ and between spots in $S$. Specifically, we first define a phylogenetic distance matrix $C^T$ that indicates the distances between cells in the $T$ from the scRNA-seq data, and a spatial distance matrix $C^S$ that indicates the distances between spots in $S$ from the ST data. The mapping problem is then formulated through an FGW problem that combines the inter-modality feature cost $C^F$ with the intra-modality structural costs $C^T$ and $C^S$ as
+\begin{align}
+\label{eq:fgw_ot}
+    \gamma* &= \operatorname*{argmin}_{{ \Gamma(q_X, q_Y)}}\, (1-\alpha) 
+    \sum_{n=1}^N \sum_{m=1}^M C^F_{nm}\gamma_{nm} 
+    + \alpha \sum_{n=1}^N \sum_{n'=1}^N \sum_{m=1}^M \sum_{m=1}^M 
+      \vert C^T_{nn'} - C^S_{mm'}\vert^2 \gamma_{nm}\gamma_{n'm'},
+\end{align}
+corresponding to the FGW cost
+\begin{equation}
+    \label{eq:fgw_cost}
+    C_{nm} = (1-\alpha) C^F_{nm} +  \alpha L_{nm},
+\end{equation}
+where $L$ is the linearized Gromov-Wasserstein cost between the two intra-modality cost matrices (see Supplementary Note 1) and $\alpha\in[0,1]$ interpolates between the feature and structural terms. Intuitively, $\alpha=1$ indicates that the mapping must be obtained using only the gene expression similarities in $C^F$. Conversely, $\alpha=0$ indicates that only the structural information in $T$ and $S$ should be used for the mapping. We follow previous approaches~\cite{lange_mapping_2024} and introduce an entropic regularization term to the cost in \Cref{eq:fgw_ot}, obtaining the complete problem
+\begin{equation}
+    \gamma^* =\operatorname*{argmin}_{\gamma\in \Gamma(q_X, q_Y)}\sum_{n=1}^N \sum_{m=1}^M C_{nm}\gamma_{nm} - \epsilon H(\gamma),
+\end{equation}
+where $\epsilon$ is the regularization strength. For a given $\alpha, q_X, q_Y$ and $\epsilon$, this problem may be solved using the Sinkhorn algorithm~\cite{cuturi_sinkhorn_2013} (see Supplementary Note 1 for details).
+
+\subsection*{Clade-aware FGW}
+
+The global $\alpha$ does not account for potential variations in concordance between the tree and spatial structure across phylogenetic clades. For example, the spatial organization of cells in a clade may closely follow their evolutionary history, whereas cells from another clade with more motility may have diverged more from their initial locations after cell division. To  capture these differences, we endow each clade $\tau$ with its own $\alpha_\tau$. Additionally, we decompose the structural cost $L$ into cross-clade $L^{\times}$ and within-clade terms $L^w$ and allow each term to have its own contribution to the OT problem. Specifically, let $\tau(n)$ be the clade to which cell $n$ belongs. We construct an $N\times N$ masking matrix
+\begin{equation}
+    \Omega^w_{nn'} = \begin{cases}
+        1, \quad \tau(n) = \tau(n')\\
+        0,\quad \text{o.w.}
+    \end{cases}
+\end{equation}
+indicating which pairs of cells belong to the same clade, and use it to construct $\Omega^{\times}=\mathbf{1}\mathbf{1}^T-\Omega^w$, which indicates only the pairs of cells in distinct clades. Each of these masking matrices may be used to create a different linearized GW cost (Supplementary Note 1), and the total structural cost then decomposes as
+\begin{equation}
+    L_{nm} = L^\times_{nm} + L^{w}_{nm}.
+\end{equation}
+We tune the contribution of each term to the total cost by introducing weights $\theta_{\tau} \in [0,1], \forall \tau \in T$, and obtain the clade-aware FGW cost
+\begin{equation}
+\label{eq:cladefgw_cost}
+    C_{nm}(\alpha, \theta, \gamma) = (1 - \alpha_{\tau(n)}) C^F_{nm} + \alpha_{\tau(n)} \left[(1-\theta_{\tau(n)}) L^{\times}_{nm}(\gamma) + \theta_{\tau(n)} L^{w}_{nm}(\gamma)\right],
+\end{equation}
+where we have made the dependencies of the cost on the weights $\alpha$ and $\theta$, as well as the dependency of the structural term on $\gamma$ explicit (see Supplementary Note 1). Unlike the global cost, this decomposition enables the mappings to use more or less clade-specific structure by tuning $\alpha_\tau$ and $\theta_\tau$. Specifically, $\alpha_\tau$ indicates how much tree-space concordance to use when mapping cells from clade $\tau$ to spatial spots, and $\theta_\tau$ indicates whether the contribution from that clade comes more from its within-clade structure, or from its contrast with other clades. 
+
+\subsection*{Multiscale OT on clone trees}
+When the phylogenetic tree is not fully resolved at single-cell level but rather only at clone level, the structural cost term of the FGW problem is constant among cells of the same clone.  In this scenario we proceed step-wise. First, we consider the clone-spot OT problem only, where the features cost is computed using clone gene expression profiles, and the structural cost also only considers clone-clone distances in the tree. We then consider the per-clone cell-spot OT problem using only the features cost, and use the spot marginals learned from the first mapping to guarantee cross-clone consistency. We therefore 
+
+
+\subsection*{Optimizing $\alpha$ and $\theta$ via subclone deconvolution}
+Choosing the appropriate interpolation parameter $\alpha$ and structural decomposition weights $\theta$ is a difficult task. Here we aim to jointly learn $\alpha$, $\theta$ and $\gamma$ by parameterizing an objective function which is orthogonal to the feature and structural cost matrices in the FGW OT problem in \eqref{eq:cladefgw_cost}. Specifically, we rely on subclone deconvolution of spatial spots using the copy number aberration (CNA) profiles of subclones obtained from the scRNA-seq data. Assuming there are $K$ known subclones identified from the scRNA-seq data, with $z_{nk}$ indicating the assignment of cell $n$ to subclone $k$, and $w_{kg}$ indicating the CNA of gene $g$ in subclone $k$, we model the spot gene expression data $Y$ as 
+\begin{equation}
+\label{eq:obs_model}
+    Y_{mg} \sim \mathrm{Poisson}\!\left(f_{mg}\right)\quad \text{with} \quad f^{W,z}_{mg}(\gamma, l) = l_m \sum_{k=1}^K W_{kg} \left(\sum_{n=1}^N z_{nk} \gamma_{nm} \right)
+\end{equation}
+
+where $l_m$ is a scale factor for each spot with prior $l_m \sim \mathrm{Gamma}(1, 1)$. Intuitively, this model states that the observed per-spot counts are obtained by a mixture of the gene expression profiles of the cells in that spot, where those gene expression profiles have been previously summarized in $K$ distinct states with specific signatures. Similar versions of this model have been proposed~\cite{lopez2022destvi, kleshchevnikov2022cell2location}, but they do not tie the mapping $\gamma$ through an OT solution as we do here. The parameters of the prior distribution of the scale factors may be set to preserve the empirical per-spot variance-mean ratios~\cite{levitin2019novo}.
+    
+Let $P(Y|f^{W,z}_{mg}(\gamma, l))$ be a Poisson likelihood function, $P(l)$ the Gamma prior, and write $\gamma=\gamma(\alpha, \theta)$ to emphasize the dependence of the mapping on the learnable parameters. The optimization problem is therefore
+\begin{equation}
+\label{eq:data_objective}
+    \alpha^*, \theta^*, l^* = \operatorname*{argmax}_{\alpha, \theta, l} P(Y|f^{W,z}_{mg}(\gamma(\alpha, \theta), l)) P(l),
+\end{equation}
+where we perform gradient descent on $\alpha$, $\theta$ and $l$, and $\gamma(\alpha, \theta)$ is obtained via an inner optimization routine through the Sinkhorn algorithm with the FGW cost in \Cref{eq:cladefgw_cost}.
+
+In detail, the optimization scheme proceeds as follows. Given feature and structural distance matrices, $C^F$ and $L$, respectively, and an initial mapping $\gamma^0$, we obtain $\gamma$ as the output of the Sinkhorn algorithm, i.e.
+\begin{gather}
+    \gamma(\alpha, \theta) = \text{diag}(u) e^{-C(\alpha, \theta, \gamma^0) / \epsilon}\text{diag}(v),
+\end{gather}
+where $v$ and $u$ are matrices that have been optimized in order to fulfill certain marginal constraints on the coupling and $\epsilon$ is the entropic regularization weight/temperature. For given $\alpha, \theta$, we alternate between the Sinkhorn algorithm and cost updates using \Cref{eq:cladefgw_cost} until $\gamma$ converges.
+
+Meanwhile, to allow the feature and structure distance matrices to be on a comparable scale and ensure interpretability of $\alpha$, we consider \textit{centered and normalized} versions, $\widehat{C^F}$ and $\widehat{L(\gamma,\theta)}$, such that
+\begin{equation}
+    C(\alpha, \theta, \gamma) = s\left((1-\alpha)\widehat{C^F} + \alpha \widehat{L(\gamma,\theta)} \right),
+\end{equation}
+where we choose $s$ in order to keep the scale of the OT cost fixed through optimization iterations, e.g. such that $\text{median}\left(\left|C(\alpha, \theta, \gamma)\right|\right) = 1$, giving
+\begin{equation}
+\label{eq:s}
+    s = \frac{1}{\text{median}\left(\left|(1-\alpha)\widehat{C^F} + \alpha \widehat{L(\gamma,\theta)}\right|\right)}.
+\end{equation}
+
+The overall scaling of the OT cost via $s$  hinders $\alpha$ from 1) simply scaling the magnitude of the cost function, or 2) becoming a tuneable coefficient of $\epsilon$. If $s$ is independent of $\alpha$, then both 1) and 2) may occur when $\widehat{C^F}$ or $\widehat{L(\gamma,\theta)}$ are composed of mostly zero entries. 
+% That is, \Cref{eq:s} ensures that $\alpha$ will trade off the weight between features and structure, as intended. 
+However, it is easy to show that if $\widehat{C^F}$ or $\widehat{L(\gamma,\theta)}$ are zero matrices and $s$ is chosen as above, then, for a fixed $\gamma$, $\nabla_\alpha \gamma(\alpha) = 0$. As a result, when there is either no feature signal or structural correspondence between modalities, we are unable to learn $\alpha$. To account for such situations, we keep track of the relative scale of $\text{median}(|\widehat{C^F}|$ and $\text{median}(|\widehat{L(\theta, \gamma)}|$, and set
+\begin{equation}
+\label{eq:alpha_fixed}
+    \alpha = \begin{cases}
+        1, \quad \text{median}(|\widehat{L(\theta, \gamma)}| > \kappa \cdot \text{median}(|\widehat{C^F}|\\
+        0,\quad \text{median}(|\widehat{C^F}| > \kappa \cdot \text{median}(|\widehat{L(\theta, \gamma)}|,
+    \end{cases}
+\end{equation}
+where $\kappa$ is a threshold parameter indicating how much the medians of the two terms must differ to consider one these extreme cases where we fix $\alpha$.
+
+
+
+% In the gradient derivations we will take $s$ as a normalization constant, i.e. as a function of a constant, non-adjustable $\alpha$. 
+
+% To derive an analytical expression for the gradient of the objective in \Cref{eq:data_objective} w.r.t. $\alpha$ we focus on the Poisson log-likelihood function, which can be written as
+% \begin{equation}
+%     \mathcal{L} = \sum_{mg}\log P(Y_{mg}|f^{W,z}_{mg}(\gamma(\alpha, \theta), l))  \propto \sum_{mg} Y_{mg}\log f^{W,z}_{mg}(\gamma(\alpha, \theta), l) - f^{W,z}_{mg}(\gamma(\alpha, \theta), l), 
+% \end{equation}
+% while the expression for the gradient is expressed as 
+% \begin{align}
+% \label{eq:gradient}
+%     \nabla_\alpha \mathcal{L} &= -\frac{1}{\epsilon} \sum_{nmg} \left(\frac{Y_{mg}}{f^{W,z}_{mg}(\gamma(\alpha, \theta), l)} - 1\right) \frac{\partial f^{W,z}_{mg}(\gamma(\alpha, \theta), l)}{\partial \gamma(\alpha, \theta)} \gamma_{mn}(\alpha, \theta)\frac{
+%     \widehat{L}_{mn} - \widehat{C^F}_{mn}}{\text{median}\left(\left|(1-\alpha)\widehat{C^F} + \alpha \widehat{L}\right|\right)},
+% \end{align}
+% and its derivation can be found in the supplementary material.
+
+We use gradient descent with the Adam optimizer~\cite{kingma2014adam} to maximize the posterior score of $\alpha$, $\theta$, and $l$. 
+%It is important to note that the likelihood of the spot deconvolution model as defined in~\Cref{eq:obs_model} may be a proxy to the features cost matrix $C^F$, which may lead to a bias in the optimal value of $\alpha$. To minimize this interference, we compute $C^F$ as the Euclidean distances between cells in the latent spaces learned by scVI~\cite{lopez2018deep} on $X$ and on $Y$ separately, and learn cell states $z$ and their signatures $W$ using an orthogonal signal based  on non-negative matrix factorization of the single-cell data $X$ using scHPF~\cite{levitin2019novo}.
+
+\subsection*{Optimizing $\alpha$ and $\theta$ from a ground truth mapping}
+For validation purposes, we may wish to When both the lineage tree and spatial locations of single cells are available, we may find the weights in the clade-aware FGW cost without the use of the deconvolution problem defined in \Cref{eq:obs_model}. In the absence of closed-form expressions for $\alpha$ and $\theta$ given the true $\gamma^*$, we formulate this problem as an optimization task. Specifically, we aim to find the $\alpha,\theta$ that result, through the Sinkhorn algorithm, in a mapping $\gamma$ that minimizes the Symmetric Kullback-Leibler divergence to the true $\gamma^*$,
+
+\begin{equation}
+\label{eq:kl_objective}
+    \alpha^*, \theta^* = \operatorname*{argmin}_{\alpha, \theta} KL(\gamma(\alpha, \theta) || \gamma^*) + KL(\gamma^*|| \gamma(\alpha, \theta)),
+\end{equation}
+which proceeds similarly to the scheme described in the previous section but with a different objective function, and we again use gradient descent with the Adam optimizer~\cite{kingma2014adam} to optimize unconstrained versions of $\alpha$ and $\theta$.
+
+% \subsection*{Hierarchical learning scheme}
+% \toolnamex operates in two steps. The method first learns a global mapping $\gamma$ and $\alpha$, capturing the overall structural signal in the data by solving the optimization problem in Equation~\ref{eq:data_objective}. Then, a clade-aware mapping $\gamma$ and clade-specific $\alpha_\tau$  are obtained using a regularized optimization problem that combines the spot-deconvolution objective with a term that promotes similarity to the global map:
+% \begin{equation}
+% \label{eq:data_objective}
+%     \alpha^*, l^* = \operatorname*{argmax}_{\alpha, l} P(Y|\gamma(\alpha), l; z, W) P(l) - \tau KL(\gamma||\gamma^g),
+% \end{equation}
+
+% takes as input a set of clades and learns per-clade $\alpha_\tau$, and a corresponding mapping $\gamma$. Intuitively, learning a clade-aware mapping $\gamma$ trades-off structural signal across clades for structural signal within those clades, which is reflected both in the learned values of $\alpha_\tau$ and in the accuracy of the mappings. For example, for the global FGW, the mapping $\gamma^g$ reflects global structure across all clades in the tree with some weight $\alpha^g$, but is unable to detect clade-specific structure. Specifically, the optimal $\alpha^g$ may be too low for parts of the tree which have clear structural signal, and too high for parts of the tree without any structural signal, which may lead to low a quality mapping $\gamma^g$. In contrast, for clade-aware FGW, the resulting mapping $\gamma^\Omega$ may be more accurate by increasing or decreasing the weight of the structural signal in different clades, but loses cross-clade signal. Therefore, 
+% To avoid discarding the beneficial signal from the global mapping as we consider deeper clades, we extend the per-clade $\alpha^d_\tau$ optimization with a regularization term that penalizes deviations from the mappings obtained at $d=1$.
+
+% \subsection*{Hyperparameter choice}
+% \toolnamex has three hyperparameters, $D$, $\epsilon$ and $\tau$. For simplicity, we let $D$ be a user-defined hyperparameter depending on the level of resolution of interest for their analysis. For each data set, we set $\epsilon$ as the smallest value that retains a stable learning procedure for the global FGW problem, and use the same value for the subsequent runs at deeper levels. Finally, for each level $d>1$, we set $\tau$
+
+% Additionally, to \toolnamex outputs one mapping $\gamma^d$ per tree depth $d$  and the corresponding per-clade $\alpha_\tau$ at each depth. To choose the optimal mapping, across all depths, we select the one that attains the highest likelihood.
+
+
+\subsection*{Simulated data}
+We developed a framework to simulate lineage-traced single-cell RNA-seq and spatial transcriptomics data based on the Cassiopeia software~\cite{jones_inference_2020}. We used Cassiopeia to generate single-cell phylogenies, and added routines to place the single cells in 2D space, to generate gene expression profiles, and to simulate scRNA-seq and Visium assays from those profiles. We use two Brownian Motion models on the tree: one to generate the spatial locations, and another for the gene expression profiles. For each model, we build the variance-covariance matrix induced by the phylogenetic tree, which we modify to explore different biological scenarios, by introducing clade-specific diffusion rates. This captures clone-specific cell motilities in the spatial model, and clone-specific plasticity in the gene expression model. We additionally use Pagel's $\lambda$ transformation to vary the influence of the tree structure in the simulated spatial locations or gene expression profiles.
+
+\subsection*{Real synthetic data}
+We obtained the spatially-resolved lineage tracing data generated in \cite{koblan2025high} through the pycea-lineage Python package
+We applied the same approach from the simulated data to map cells to spots of.
+
+
+% \subsection*{Real data}
+% 
+
+\section*{Code availability}
+\toolnamex is freely available as a Python package in \url{https://github.com/pedrofale/phylospatial_mapping}. 
+
+\section*{Competing interests}
+The authors declare that they have no competing interests.
+
+\section*{Acknowledgements}
+The authors thank Carl-Johan Eriksson for referring them to the spatially-resolved lineage tracing data from \cite{koblan2025high} and useful discussions.
+
+\bibliographystyle{unsrt}  
+\bibliography{references}
+
+\end{document}
