@@ -1,0 +1,61 @@
+statistic,arm,mean_err,sd,n,section
+best-w (ORACLE),FGW,405.3171983604079,49.90212541406252,30,
+best-w (ORACLE),clone spread,387.23105906066587,36.09162461160322,30,
+best-w (ORACLE),learned rank 2,379.29476354540674,51.17706824853506,30,
+median-over-grid,FGW,520.1403807535801,68.07070167641906,30,
+median-over-grid,clone spread,514.3997221778101,48.10099832481953,30,
+median-over-grid,learned rank 2,502.4733612705793,64.79543451437436,30,
+fixed-w (per-arm w*),FGW,412.07528354348153,45.81281387610359,30,
+fixed-w (per-arm w*),clone spread,402.8285038985124,41.64866147487205,30,
+fixed-w (per-arm w*),learned rank 2,382.0682060915744,52.507622394686294,30,
+matched-w (common w=0.1165),FGW,482.8075336298711,86.42421148511616,30,
+matched-w (common w=0.1165),clone spread,486.0794457331279,70.7319438128901,30,
+matched-w (common w=0.1165),learned rank 2,382.0682060915744,52.507622394686294,30,
+LOSO-w (clean),FGW,412.07528354348153,45.81281387610359,30,
+LOSO-w (clean),clone spread,410.02876209450284,40.94815333730419,30,
+LOSO-w (clean),learned rank 2,382.0682060915744,52.507622394686294,30,
+best-w (ORACLE),FGW,439.6117202953181,,0,M3-1
+best-w (ORACLE),clone spread,407.380992635781,,0,M3-1
+best-w (ORACLE),learned rank 2,416.2430770896746,,0,M3-1
+best-w (ORACLE),FGW,433.41250816313476,,0,M3-2
+best-w (ORACLE),clone spread,412.03742299857583,,0,M3-2
+best-w (ORACLE),learned rank 2,407.13662347711613,,0,M3-2
+best-w (ORACLE),FGW,342.9273666227708,,0,M3-4
+best-w (ORACLE),clone spread,342.2747615476404,,0,M3-4
+best-w (ORACLE),learned rank 2,314.5045900694295,,0,M3-4
+median-over-grid,FGW,560.5185657245472,,0,M3-1
+median-over-grid,clone spread,537.3319468535567,,0,M3-1
+median-over-grid,learned rank 2,534.2841771091963,,0,M3-1
+median-over-grid,FGW,571.9987251266895,,0,M3-2
+median-over-grid,clone spread,552.530930880889,,0,M3-2
+median-over-grid,learned rank 2,556.5897452568875,,0,M3-2
+median-over-grid,FGW,427.90385140950286,,0,M3-4
+median-over-grid,clone spread,453.3362887989845,,0,M3-4
+median-over-grid,learned rank 2,416.546161445654,,0,M3-4
+fixed-w (per-arm w*),FGW,440.2607457149621,,0,M3-1
+fixed-w (per-arm w*),clone spread,417.1624450232915,,0,M3-1
+fixed-w (per-arm w*),learned rank 2,420.0645066484067,,0,M3-1
+fixed-w (per-arm w*),FGW,440.55625549383467,,0,M3-2
+fixed-w (per-arm w*),clone spread,435.5868706015643,,0,M3-2
+fixed-w (per-arm w*),learned rank 2,409.3032475055993,,0,M3-2
+fixed-w (per-arm w*),FGW,355.40884942164786,,0,M3-4
+fixed-w (per-arm w*),clone spread,355.73619607068116,,0,M3-4
+fixed-w (per-arm w*),learned rank 2,316.83686412071717,,0,M3-4
+matched-w (common w=0.1165),FGW,550.1778273136064,,0,M3-1
+matched-w (common w=0.1165),clone spread,524.5424813382141,,0,M3-1
+matched-w (common w=0.1165),learned rank 2,420.0645066484067,,0,M3-1
+matched-w (common w=0.1165),FGW,529.6401714531161,,0,M3-2
+matched-w (common w=0.1165),clone spread,540.7322285155718,,0,M3-2
+matched-w (common w=0.1165),learned rank 2,409.3032475055993,,0,M3-2
+matched-w (common w=0.1165),FGW,368.6046021228912,,0,M3-4
+matched-w (common w=0.1165),clone spread,392.96362734559796,,0,M3-4
+matched-w (common w=0.1165),learned rank 2,316.83686412071717,,0,M3-4
+LOSO-w (clean),FGW,440.2607457149621,,0,M3-1
+LOSO-w (clean),clone spread,426.0656159901905,,0,M3-1
+LOSO-w (clean),learned rank 2,420.0645066484067,,0,M3-1
+LOSO-w (clean),FGW,440.55625549383467,,0,M3-2
+LOSO-w (clean),clone spread,435.5868706015643,,0,M3-2
+LOSO-w (clean),learned rank 2,409.3032475055993,,0,M3-2
+LOSO-w (clean),FGW,355.40884942164786,,0,M3-4
+LOSO-w (clean),clone spread,368.4337996917535,,0,M3-4
+LOSO-w (clean),learned rank 2,316.83686412071717,,0,M3-4
