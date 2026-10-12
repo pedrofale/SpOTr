@@ -5,7 +5,7 @@ clade the METHOD assigns to them.  Method: law-based tree term, tree weight lear
 The 8 largest clades get the 8 palette colours; the 10 smaller ones are grey.
 Usage: python 63_clone_maps.py <out_dir>
 """
-import sys, json, importlib.util
+import os, sys, json, importlib.util
 from pathlib import Path
 import numpy as np, pandas as pd
 import matplotlib
@@ -25,8 +25,11 @@ SEC, SEED, TAG = "M3-4", 0, "M3-4_s0_c20_a-only"
 P = m60.prep(SEC, SEED)
 z = np.load(HERE / "anchor_fast" / f"{TAG}.npz")
 n, m = P["M"].shape
-T = m60.m55.solve(P["M"], z["W"] * z["sc"], z["WPhi"] * z["sc"], P["D"], P["D"] ** 2,
-                  np.ones(n) / n, P["q"], float(z["a"]))
+if os.environ.get("T_NPY"):                      # a coupling saved by 70_spotr.py (e.g. learned per-clade)
+    T = np.load(os.environ["T_NPY"]).astype(float)
+else:
+    T = m60.m55.solve(P["M"], z["W"] * z["sc"], z["WPhi"] * z["sc"], P["D"], P["D"] ** 2,
+                      np.ones(n) / n, P["q"], float(z["a"]))
 Texp = m60.m55.solve(P["M"], np.zeros((n, n)), np.zeros((n, n)), P["D"], P["D"] ** 2, np.ones(n) / n, P["q"], 0.0)
 
 K = P["K"]; Y = np.eye(K)[P["cl"]]
