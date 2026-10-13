@@ -26,7 +26,9 @@ from scipy.spatial.distance import squareform
 
 HERE = Path(__file__).resolve().parent
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
-OUT = Path(ARGS[0]) if ARGS else HERE.parents[2] / "SpOTr-overleaf" / "figures" / "petracer_in_action.pdf"
+SLIDE = "--no-slide" not in sys.argv                         # --no-slide: drop the spatial-slide panel
+OUT = Path(ARGS[0]) if ARGS else HERE.parents[2] / "SpOTr-overleaf" / "figures" / (
+    "petracer_in_action.pdf" if SLIDE else "petracer_in_action_noslide.pdf")
 SEC, SEED, ARM, CUT = "M3-4", 0, "per-clade", 32.0
 
 
@@ -50,7 +52,12 @@ n, m = T.shape
 Texp = ot.emd(np.ones(n) / n, X["q"], X["M"])              # expression-only exact OT, for the comparison numbers
 m73 = mod("m73", "73_tangram.py")                          # Tangram on the same cells and spots, same seed
 n_all = len(z["C_tree"]); use = np.random.default_rng(SEED).permutation(n_all)[n_all // 2:]
-Ttg = m73.tangram(np.asarray(z["X_sc"], float)[use], np.asarray(z["X_st"], float), X["q"], SEED)
+f_tg = HERE / "spotr_out" / f"T_{SEC}_s{SEED}_tangram.npy"   # saved: Tangram is not bit-reproducible on the GPU,
+if f_tg.exists():                                          # so every version of the figure reads one run
+    Ttg = np.load(f_tg).astype(float)
+else:
+    Ttg = m73.tangram(np.asarray(z["X_sc"], float)[use], np.asarray(z["X_st"], float), X["q"], SEED)
+    np.save(f_tg, Ttg.astype(np.float32))
 
 # ---------------------------------------------------------------- lineages: the tree cut at CUT days
 Z = linkage(squareform(X["AGE"], checks=False), "average")  # AGE is ultrametric (days), so this is the tree itself
@@ -93,6 +100,8 @@ LIN_COL = ["#2a78d6", "#eb6834", "#1baf7a", "#c9c8c2"]     # documented slots 1-
 EMPTY = "#f1f0ec"
 FIG_W = 911 / 72
 FIG_H = 5.7
+if not SLIDE:                                               # same scale, one panel fewer
+    FIG_W = FIG_W - 2.12 - 0.24
 fig = plt.figure(figsize=(FIG_W, FIG_H))
 xy = X["spots"]; pitch = float(z["pitch"]); pad = pitch * 0.9
 W_MAP = 2.12                                                # inches per map panel
@@ -150,30 +159,36 @@ pc1 = pc1 if np.corrcoef(pc1, Xst.sum(1))[0, 1] >= 0 else -pc1
 ramp = matplotlib.colors.LinearSegmentedColormap.from_list("slide", ["#eef3f7", "#9fb3c6", "#34495e"])
 v = (pc1 - np.percentile(pc1, 2)) / (np.percentile(pc1, 98) - np.percentile(pc1, 2))
 x_b = L_TREE + W_TREE + 0.5
-ax_b = fig.add_axes(frac(x_b, W_MAP))
-spot_map(ax_b, [ramp(np.clip(t, 0, 1)) for t in v], "Spatial slide", "b", sub="no lineage; dots: the 20% anchor spots",
-         marks=X["J"])
-x0, y0 = xy[:, 0].min(), xy[:, 1].min() - pad * 0.55
-ax_b.plot([x0, x0 + 500], [y0, y0], color=INK, lw=2, solid_capstyle="butt")
-ax_b.text(x0 + 250, y0 - pitch * 0.35, "500 µm", ha="center", va="top", fontsize=8.5)
-cax = fig.add_axes(frac(x_b + W_MAP * 0.52, W_MAP * 0.42, y0=BOT - 0.36, h=0.09))
-cb = fig.colorbar(matplotlib.cm.ScalarMappable(cmap=ramp), cax=cax, orientation="horizontal", ticks=[])
-cb.outline.set_visible(False)
-cax.text(-0.03, 0.5, "low", transform=cax.transAxes, ha="right", va="center", fontsize=8, color=INK2)
-cax.text(1.03, 0.5, "high", transform=cax.transAxes, ha="left", va="center", fontsize=8, color=INK2)
-cax.text(0.5, -0.6, "expression PC1", transform=cax.transAxes, ha="center", va="top", fontsize=8, color=INK2)
+if SLIDE:
+    ax_b = fig.add_axes(frac(x_b, W_MAP))
+    spot_map(ax_b, [ramp(np.clip(t, 0, 1)) for t in v], "Spatial slide", "b", sub="no lineage; dots: the 20% anchor spots",
+             marks=X["J"])
+    x0, y0 = xy[:, 0].min(), xy[:, 1].min() - pad * 0.55
+    ax_b.plot([x0, x0 + 500], [y0, y0], color=INK, lw=2, solid_capstyle="butt")
+    ax_b.text(x0 + 250, y0 - pitch * 0.35, "500 µm", ha="center", va="top", fontsize=8.5)
+    cax = fig.add_axes(frac(x_b + W_MAP * 0.52, W_MAP * 0.42, y0=BOT - 0.36, h=0.09))
+    cb = fig.colorbar(matplotlib.cm.ScalarMappable(cmap=ramp), cax=cax, orientation="horizontal", ticks=[])
+    cb.outline.set_visible(False)
+    cax.text(-0.03, 0.5, "low", transform=cax.transAxes, ha="right", va="center", fontsize=8, color=INK2)
+    cax.text(1.03, 0.5, "high", transform=cax.transAxes, ha="left", va="center", fontsize=8, color=INK2)
+    cax.text(0.5, -0.6, "expression PC1", transform=cax.transAxes, ha="center", va="top", fontsize=8, color=INK2)
 
 # c, d: true and inferred lineages
 GAP = 0.24
-x_c = x_b + W_MAP + GAP
+x_c = x_b + W_MAP + GAP if SLIDE else x_b
+LET = "cde" if SLIDE else "bcd"
 ax_c = fig.add_axes(frac(x_c, W_MAP))
-spot_map(ax_c, [LIN_COL[k] if h else EMPTY for k, h in zip(true_lin, has)], "True lineages", "c",
+spot_map(ax_c, [LIN_COL[k] if h else EMPTY for k, h in zip(true_lin, has)], "True lineages", LET[0],
          sub="in-situ lineage readout")
+if not SLIDE:                                               # the scale bar lived in the slide panel
+    x0, y0 = xy[:, 0].min(), xy[:, 1].min() - pad * 0.55
+    ax_c.plot([x0, x0 + 500], [y0, y0], color=INK, lw=2, solid_capstyle="butt", clip_on=False)
+    ax_c.text(x0 + 250, y0 - pitch * 0.35, "500 µm", ha="center", va="top", fontsize=8.5)
 ax_d = fig.add_axes(frac(x_c + W_MAP + GAP, W_MAP))
-spot_map(ax_d, [LIN_COL[k] if h else EMPTY for k, h in zip(tg_lin, has)], "Tangram", "d",
+spot_map(ax_d, [LIN_COL[k] if h else EMPTY for k, h in zip(tg_lin, has)], "Tangram", LET[1],
          sub="expression only")
 ax_e = fig.add_axes(frac(x_c + 2 * (W_MAP + GAP), W_MAP))
-spot_map(ax_e, [LIN_COL[k] if h else EMPTY for k, h in zip(inf_lin, has)], "SpOTr", "e",
+spot_map(ax_e, [LIN_COL[k] if h else EMPTY for k, h in zip(inf_lin, has)], "SpOTr", LET[2],
          sub="expression + tree + anchor")
 
 # legend and the numbers, under c and d
@@ -183,9 +198,9 @@ labels = [f"clades {', '.join(sorted(cs, key=int))}" for cs in lin_clades[:3]] +
 fig.legend(handles, labels, loc="lower left", bbox_to_anchor=((x_c - 0.05) / FIG_W, 0.68 / FIG_H), ncol=4, frameon=False,
            fontsize=9, handlelength=1.1, handletextpad=0.45, columnspacing=1.3)
 pe = NUM["placement_error_um"]
-fig.text(x_b / FIG_W, 0.07 / FIG_H,
-         f"On the {len(held)} spots outside the anchor, dominant lineage right: SpOTr {100 * la['spotr']:.0f}%, Tangram "
-         f"{100 * la['tangram']:.0f}%, expression-only OT {100 * la['expression']:.0f}%, largest lineage alone {100 * la['largest']:.0f}%.\n"
+fig.text((x_b if SLIDE else x_c - 0.05) / FIG_W, 0.07 / FIG_H,
+         f"{len(held)} spots outside the anchor, dominant lineage right: SpOTr {100 * la['spotr']:.0f}%, Tangram "
+         f"{100 * la['tangram']:.0f}%, expression-only OT {100 * la['expression']:.0f}%, largest lineage {100 * la['largest']:.0f}%.\n"
          f"Dominant clade of the 18 right: {100 * ca['spotr']:.0f}%, {100 * ca['tangram']:.0f}%, {100 * ca['expression']:.0f}%, "
          f"{100 * ca['largest']:.0f}%.\n"
          f"Median cell placement error: SpOTr {pe['spotr']:.0f} µm, Tangram {pe['tangram']:.0f} µm, expression-only OT "
