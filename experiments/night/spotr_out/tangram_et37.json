@@ -1,0 +1,82 @@
+[
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 3,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.45593231964198594
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 4,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.4607801228533455
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 5,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.4576470940961386
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 6,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.4678524559273699
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 7,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.45447625581829376
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 3,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.2803326713447623
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 4,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.2704103213448251
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 5,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.29374519580725955
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 6,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.27830033970744245
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 7,
+  "arm": "tangram",
+  "lambda_d": 1.0,
+  "dens": 0.2801260743765025
+ }
+]

@@ -91,7 +91,8 @@ def method_and_simulation():
 
 def real():
     res = []
-    for f in ["real.json", "real_more.json", "real_controls.json", "real_oracle.json", "real_mom.json", "real_s47.json"]:
+    for f in ["real.json", "real_more.json", "real_controls.json", "real_oracle.json", "real_mom.json", "real_s47.json",
+              "real_anclaw.json", "real_anc1_learn.json"]:
         if (HERE / "spotr_out" / f).exists():
             res += json.load(open(HERE / "spotr_out" / f))
     rows = []
@@ -124,8 +125,8 @@ def real():
     NUM["selection_picks"] = sel.picked.value_counts().to_dict()
     order = [("expression", "Expression only", GREY), ("tangram", "Tangram", PURPLE), ("path-fgw", "FGW, square loss", ORANGE),
              ("path-law", "SpOTr, shared L", AQUA), ("per-clade", "SpOTr, per-clade L", "#184f95"),
-             (ORACLE_ARM, "ceiling: true per-clade L", GREY),
-             ("per-random", "control: random groups", GREY), ("path-law-shuffled", "control: shuffled tree", GREY)]
+             ("per-clade-mom", "SpOTr, per-clade L from anchor", BLUE), (ORACLE_ARM, "ceiling: true per-clade L", GREY),
+             ("path-law-shuffled", "control: shuffled tree", GREY)]
     order = [o for o in order if (D.arm == o[0]).any()]
     plt.rcParams.update({"font.size": 21, "axes.labelsize": 21, "xtick.labelsize": 20, "ytick.labelsize": 21})
     fig, ax = plt.subplots(figsize=(5.4, 6.6))
@@ -197,7 +198,7 @@ def real():
     E = pd.DataFrame([dict(tag=r["tag"], seed=r["seed"], arm=r["arm"], dens=r["dens"]) for r in et])
     E.to_csv(OUT / "etracer_summary.csv", index=False)
     order_e = [("expression", "expr.", GREY), ("tangram", "Tangram", PURPLE), ("fgw", "FGW", ORANGE), ("law-path", "shared L", AQUA),
-               ("per-clone", "per-clone L", "#184f95")]
+               ("per-clone", "per-clone L", "#184f95"), ("per-clone-mom", "from anchor", BLUE)]
     order_e = [o for o in order_e if (E.arm == o[0]).any()]
     fig, ax = plt.subplots(figsize=(4.9, 4.6)); axes = [ax]
     for j, (tag, name, mk) in enumerate([("LE", "late escape", "o"), ("EE", "early escape", "s")]):
@@ -209,7 +210,7 @@ def real():
         ax.plot(np.arange(len(order_e)) + (j - 0.5) * 0.3, means, color=INK2, lw=1.4, ls="-" if tag == "LE" else "--",
                 label=name)
     ax.set_xticks(range(len(order_e))); ax.set_xticklabels([o[1] for o in order_e], fontsize=14, rotation=30, ha="right")
-    ax.legend(loc="lower center", fontsize=14, bbox_to_anchor=(0.6, 0.0))
+    ax.legend(loc="upper left", fontsize=14)
     axes[0].set_ylabel("clone-density agreement (r)")
     save(fig, "s4_etracer")
     NUM["etracer"] = {t: g.groupby("arm").dens.mean().round(3).to_dict() for t, g in E.groupby("tag")}
