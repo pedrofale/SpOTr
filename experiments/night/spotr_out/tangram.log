@@ -1,0 +1,147 @@
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-4', 'seed': 0, 'arm': 'tangram', 'err': 668.0288189301175, 'agree': 0.19813519813519814} 3s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-4', 'seed': 1, 'arm': 'tangram', 'err': 674.2428117697609, 'agree': 0.2261072261072261} 5s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-4', 'seed': 2, 'arm': 'tangram', 'err': 667.8310027686732, 'agree': 0.19813519813519814} 7s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-4', 'seed': 3, 'arm': 'tangram', 'err': 670.317886801741, 'agree': 0.21678321678321677} 9s
+INFO:root:150 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:150 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 150 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-1', 'seed': 0, 'arm': 'tangram', 'err': 711.6553926768463, 'agree': 0.1267123287671233} 10s
+INFO:root:150 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:150 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 150 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-1', 'seed': 1, 'arm': 'tangram', 'err': 691.4747890887282, 'agree': 0.1541095890410959} 12s
+INFO:root:150 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:150 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 150 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-1', 'seed': 2, 'arm': 'tangram', 'err': 691.9492549257178, 'agree': 0.1404109589041096} 14s
+INFO:root:150 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:150 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 150 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-1', 'seed': 3, 'arm': 'tangram', 'err': 710.8933396445213, 'agree': 0.1643835616438356} 16s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-2', 'seed': 0, 'arm': 'tangram', 'err': 728.9527035033987, 'agree': 0.16176470588235295} 18s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-2', 'seed': 1, 'arm': 'tangram', 'err': 773.0619707743715, 'agree': 0.18137254901960784} 19s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-2', 'seed': 2, 'arm': 'tangram', 'err': 760.1157816261552, 'agree': 0.16666666666666666} 21s
+INFO:root:175 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:175 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 175 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'PEtracer', 'sec': 'M3-2', 'seed': 3, 'arm': 'tangram', 'err': 719.1828827985225, 'agree': 0.13725490196078433} 23s
+INFO:root:1729 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1729 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1729 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'LE', 'seed': 0, 'arm': 'tangram', 'dens': 0.4518068111514331} 24s
+INFO:root:1729 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1729 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1729 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'LE', 'seed': 1, 'arm': 'tangram', 'dens': 0.4408021550936451} 25s
+INFO:root:1729 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1729 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1729 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'LE', 'seed': 2, 'arm': 'tangram', 'dens': 0.43840137641167437} 27s
+INFO:root:1437 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1437 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1437 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'EE', 'seed': 0, 'arm': 'tangram', 'dens': 0.2659873177689888} 28s
+INFO:root:1437 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1437 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1437 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'EE', 'seed': 1, 'arm': 'tangram', 'dens': 0.2774767364666878} 29s
+INFO:root:1437 training genes are saved in `uns``training_genes` of both single cell and spatial Anndatas.
+INFO:root:1437 overlapped genes are saved in `uns``overlap_genes` of both single cell and spatial Anndatas.
+INFO:root:uniform based density prior is calculated and saved in `obs``uniform_density` of the spatial Anndata.
+INFO:root:rna count based density prior is calculated and saved in `obs``rna_count_based_density` of the spatial Anndata.
+INFO:root:Allocate tensors for mapping.
+INFO:root:Begin training with 1437 genes and rna_count_based density_prior in cells mode...
+INFO:root:Saving results..
+{'data': 'eTRACER', 'tag': 'EE', 'seed': 2, 'arm': 'tangram', 'dens': 0.29369324391148594} 30s
+PEtracer Tangram: error 705.6 um, agreement 0.173
+eTRACER LE Tangram: 0.444
+eTRACER EE Tangram: 0.279

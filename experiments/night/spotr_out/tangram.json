@@ -1,0 +1,140 @@
+[
+ {
+  "data": "PEtracer",
+  "sec": "M3-4",
+  "seed": 0,
+  "arm": "tangram",
+  "err": 668.0288189301175,
+  "agree": 0.19813519813519814
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-4",
+  "seed": 1,
+  "arm": "tangram",
+  "err": 674.2428117697609,
+  "agree": 0.2261072261072261
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-4",
+  "seed": 2,
+  "arm": "tangram",
+  "err": 667.8310027686732,
+  "agree": 0.19813519813519814
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-4",
+  "seed": 3,
+  "arm": "tangram",
+  "err": 670.317886801741,
+  "agree": 0.21678321678321677
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-1",
+  "seed": 0,
+  "arm": "tangram",
+  "err": 711.6553926768463,
+  "agree": 0.1267123287671233
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-1",
+  "seed": 1,
+  "arm": "tangram",
+  "err": 691.4747890887282,
+  "agree": 0.1541095890410959
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-1",
+  "seed": 2,
+  "arm": "tangram",
+  "err": 691.9492549257178,
+  "agree": 0.1404109589041096
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-1",
+  "seed": 3,
+  "arm": "tangram",
+  "err": 710.8933396445213,
+  "agree": 0.1643835616438356
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-2",
+  "seed": 0,
+  "arm": "tangram",
+  "err": 728.9527035033987,
+  "agree": 0.16176470588235295
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-2",
+  "seed": 1,
+  "arm": "tangram",
+  "err": 773.0619707743715,
+  "agree": 0.18137254901960784
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-2",
+  "seed": 2,
+  "arm": "tangram",
+  "err": 760.1157816261552,
+  "agree": 0.16666666666666666
+ },
+ {
+  "data": "PEtracer",
+  "sec": "M3-2",
+  "seed": 3,
+  "arm": "tangram",
+  "err": 719.1828827985225,
+  "agree": 0.13725490196078433
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 0,
+  "arm": "tangram",
+  "dens": 0.4518068111514331
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 1,
+  "arm": "tangram",
+  "dens": 0.4408021550936451
+ },
+ {
+  "data": "eTRACER",
+  "tag": "LE",
+  "seed": 2,
+  "arm": "tangram",
+  "dens": 0.43840137641167437
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 0,
+  "arm": "tangram",
+  "dens": 0.2659873177689888
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 1,
+  "arm": "tangram",
+  "dens": 0.2774767364666878
+ },
+ {
+  "data": "eTRACER",
+  "tag": "EE",
+  "seed": 2,
+  "arm": "tangram",
+  "dens": 0.29369324391148594
+ }
+]

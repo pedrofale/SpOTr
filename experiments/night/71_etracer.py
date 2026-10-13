@@ -8,7 +8,8 @@ the spots (half fit, half validation); accuracy is clone-density agreement (22_'
 L is initialised from the anchor itself (clone spread over the fit spots), so no held-out information enters.
 
 Arms: expression only; FGW on the exact weight path, weight picked by the anchor (validation spots);
-SpOTr with the tree weight learned; SpOTr with the weight and one L per clone learned.
+SpOTr with the tree weight learned; SpOTr with the weight and one L per clone learned, started either at the shared
+L (per-clone) or at each clone's spread over the fit anchors (per-clone-mom).
 Caveat carried from 21_/prep_stage.py: the dissociated cells were sampled to match the tissue's clone mix using
 the barcoded bins (an answer-key leak in the cell selection, not in the mapping).
 Usage: python 71_etracer.py
@@ -93,10 +94,12 @@ def job(args):
             rows.append(dict(w=w, nll_val=m70.anchor_nll(T, X, Jv), dens=density_agreement(T, X)))
         pick = min(rows, key=lambda r: r["nll_val"])
         return dict(tag=tag, seed=seed, arm=arm, dens=pick["dens"], w=pick["w"], path=rows, L0=X["L0"], Lx=X["Lx"])
-    groups = X["cl"].copy() if arm == "per-clone" else np.zeros(X["K"], int)[X["cl"]]
-    log, best = m70.learn(X, groups, learn_a=True, a0=0.197 / 1.197)
+    groups = X["cl"].copy() if arm.startswith("per-clone") else np.zeros(X["K"], int)[X["cl"]]
+    L_init = m70.anchor_L(X) if arm == "per-clone-mom" else None     # each clone's spread over the fit anchors
+    log, best = m70.learn(X, groups, learn_a=True, a0=0.197 / 1.197, L_init=L_init)
     return dict(tag=tag, seed=seed, arm=arm, dens=density_agreement(best["T"], X), a=best["a"], L=best["L"],
-                best_step=best["step"], L0=X["L0"], sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(),
+                best_step=best["step"], nll_val=best["nll_val"], L_init=None if L_init is None else L_init.tolist(),
+                L0=X["L0"], sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(),
                 log=[{k: v for k, v in r.items() if k != "T"} for r in log])
 
 

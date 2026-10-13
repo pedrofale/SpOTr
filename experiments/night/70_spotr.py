@@ -111,6 +111,14 @@ def path_point(args):
     n = X["M"].shape[0]; p = np.ones(n) / n; D = X["D"]
     if form == "fgw":
         W = np.ones((n, n)); np.fill_diagonal(W, 0.0); WPhi = W * 2.0 * X["AGE"]
+    elif form in ("oracle", "oracle-rel"):                  # ceiling: each clade's L measured from the TRUE positions
+        meas = measured_L(X, X["cl"], X["c0"])
+        Lk = np.array([meas.get(k, np.nan) for k in range(X["K"])]); ok = np.isfinite(Lk)
+        if form == "oracle-rel":                            # keep only the pattern across clades, at the level of L0
+            Lk = Lk * X["L0"] / np.exp(np.log(Lk[ok]).mean())
+        Lk[~ok] = X["L0"]
+        same = X["cl"][:, None] == X["cl"][None, :]
+        W, WPhi = moments_np(X, np.where(same, Lk[X["cl"]][:, None], X["L0"]), X["c0"])
     else:
         W, WPhi = moments_np(X, np.full((n, n), X["L0"]), X["c0"])
     sc = scale(X, W, WPhi)
@@ -122,7 +130,7 @@ def path_point(args):
 
 # ---------------------------------------------------------------- learner
 def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, eps_rel=0.05, device="cuda", log_every=1,
-          pair_groups=None):
+          pair_groups=None, L_init=None):
     import torch
     torch.set_num_threads(1)
     dev = torch.device(device if torch.cuda.is_available() else "cpu"); DT = torch.float64
@@ -142,8 +150,9 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
     Jf = X["J"][: len(X["J"]) // 2]; Jv = X["J"][len(X["J"]) // 2:]
     Jft = torch.as_tensor(Jf, device=dev)
     u = torch.tensor(float(np.log(a0 / (1 - a0))), dtype=DT, device=dev, requires_grad=learn_a)
-    logL = torch.full((G_,), float(np.log(X["L0"])), dtype=DT, device=dev, requires_grad=True)
-    logL0 = torch.full((G_,), float(np.log(X["L0"])), dtype=DT, device=dev)          # prior centre
+    L_init = np.full(G_, float(X["L0"])) if L_init is None else np.asarray(L_init, float)   # start = prior centre
+    logL = torch.tensor(np.log(L_init), dtype=DT, device=dev, requires_grad=True)
+    logL0 = torch.tensor(np.log(L_init), dtype=DT, device=dev)                       # prior centre
     logLs = torch.tensor(float(np.log(X.get("Lx", X["L0"]))), dtype=DT, device=dev); c = float(X["c0"])   # pairs outside any group
     params = ([u] if learn_a else []) + [logL]
     opt = torch.optim.Adam(params, lr=lr)
@@ -201,6 +210,58 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
     return log, best
 
 
+def anchor_L(X, min_cells=5):
+    """each clade's mixing length read off the FIT anchor spots alone: mean squared separation of pairs of that
+    clade's anchor cells (pairs inside one spot at d = 0), minus the law's packing term from the dissociated cells'
+    tree.  Clades the fit anchors barely see keep the shared L0.  No validation spot and no true position enters."""
+    from scipy.spatial.distance import cdist
+    Jf = X["J"][: len(X["J"]) // 2]; D2 = cdist(X["spots"][Jf], X["spots"][Jf]) ** 2
+    out = np.full(X["K"], float(X["L0"]))
+    for k in range(X["K"]):
+        w = X["Nspot"][Jf, k]; idx = np.where(X["cl"] == k)[0]
+        W2 = np.outer(w, w) - np.diag(w)
+        if w.sum() < min_cells or len(idx) < 2 or W2.sum() <= 0:
+            continue
+        iu = np.triu_indices(len(idx), 1)
+        pk = float((X["NC"][np.ix_(idx, idx)][iu] / (2 * np.pi * X["rho"])).mean())
+        v = (W2 * D2).sum() / W2.sum() / 2.0 - X["c0"] ** 2 * pk
+        out[k] = float(np.sqrt(max(v, (0.25 * X["L0"]) ** 2)))
+    return out
+
+
+def anchor_law(X, fit_c=False, c_fixed=1.0, L_floor=50.0):
+    """the growth law calibrated on the FIT anchor spots and the dissociated cells' tree alone, nothing transferred.
+    One point per pair of clades (k, k'): y = mean d^2/2 over pairs of their anchor cells (pairs inside one spot at
+    d = 0), x = mean n/(2 pi rho) over dissociated pairs with one cell in each.  y = L^2 + c^2 x, fitted by
+    non-negative least squares weighted by sqrt(anchor pairs); c either fitted or fixed (c = 1: a clone packed as a
+    uniform disc)."""
+    from scipy.optimize import nnls
+    from scipy.spatial.distance import cdist
+    Jf = X["J"][: len(X["J"]) // 2]; D2 = cdist(X["spots"][Jf], X["spots"][Jf]) ** 2
+    Nf = X["Nspot"][Jf]; cl = X["cl"]; P = X["NC"] / (2 * np.pi * X["rho"])
+    xs, ys, ws = [], [], []
+    for k in range(X["K"]):
+        ik = np.where(cl == k)[0]
+        if Nf[:, k].sum() < 3 or len(ik) < 2:
+            continue
+        for k2 in range(k, X["K"]):
+            i2 = np.where(cl == k2)[0]
+            if Nf[:, k2].sum() < 3:
+                continue
+            W2 = np.outer(Nf[:, k], Nf[:, k2]) - (np.diag(Nf[:, k]) if k == k2 else 0.0)
+            if W2.sum() <= 0:
+                continue
+            sub = P[np.ix_(ik, i2)]
+            xs.append(sub[np.triu_indices(len(ik), 1)].mean() if k == k2 else sub.mean())
+            ys.append((W2 * D2).sum() / W2.sum() / 2.0); ws.append(np.sqrt(W2.sum()))
+    xs, ys, ws = map(np.array, (xs, ys, ws))
+    if fit_c:
+        coef, _ = nnls(np.c_[np.ones_like(xs), xs] * ws[:, None], ys * ws); L2, c = coef[0], np.sqrt(coef[1])
+    else:
+        c = c_fixed; L2 = max(np.sum(ws * (ys - c * c * xs)) / ws.sum(), 0.0)
+    return float(max(np.sqrt(L2), L_floor)), float(c)
+
+
 def measured_L(X, groups, c):
     out = {}
     for g in np.unique(groups):
@@ -253,6 +314,16 @@ def job_real(args):
         for r in rows:                                      # placement is scored on the cells' TRUE positions anyway
             r["form"] = "law-shuffled"
         return dict(sec=sec, seed=seed, arm=arm, path=rows)
+    if arm in ("path-law-anc1", "path-law-ancfit"):        # law calibrated on the anchor alone, nothing transferred
+        X["L0"], X["c0"] = anchor_law(X, fit_c=(arm == "path-law-ancfit"))
+        rows = [path_point((X, "law", w)) for w in WGRID]
+        return dict(sec=sec, seed=seed, arm=arm, path=rows, L0=X["L0"], c0=X["c0"])
+    if arm == "per-clade-anc1":                             # per-clade learning from the anchor-calibrated law
+        X["L0"], X["c0"] = anchor_law(X, fit_c=False)
+        log, best = learn(X, X["cl"].copy(), learn_a=True, a0=0.197 / 1.197)
+        return dict(sec=sec, seed=seed, arm=arm, err=best["err"], agree=best["agree"], a=best["a"], L=best["L"],
+                    best_step=best["step"], meas=measured_L(X, X["cl"], X["c0"]), L0=X["L0"], c0=X["c0"],
+                    sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(), log=log)
     if arm.startswith("path-"):
         rows = [path_point((X, arm[5:], w)) for w in WGRID]
         return dict(sec=sec, seed=seed, arm=arm, path=rows)
@@ -261,11 +332,13 @@ def job_real(args):
         log, best = learn(X, groups, learn_a=True, a0=0.197 / 1.197, pair_groups=groups)
         return dict(sec=sec, seed=seed, arm=arm, err=best["err"], agree=best["agree"], a=best["a"], L=best["L"],
                     best_step=best["step"], meas={}, sizes=np.bincount(groups).tolist(), log=log)
-    groups = X["cl"].copy() if arm == "per-clade" else np.zeros(X["K"], int)[X["cl"]]
-    log, best = learn(X, groups, learn_a=True, a0=0.197 / 1.197)
+    groups = X["cl"].copy() if arm.startswith("per-clade") else np.zeros(X["K"], int)[X["cl"]]
+    L_init = anchor_L(X) if arm == "per-clade-mom" else None          # start and prior centre from the fit anchors
+    log, best = learn(X, groups, learn_a=True, a0=0.197 / 1.197, L_init=L_init)
     meas = measured_L(X, X["cl"], X["c0"])
     out = dict(sec=sec, seed=seed, arm=arm, err=best["err"], agree=best["agree"], a=best["a"], L=best["L"],
-               best_step=best["step"], meas=meas, sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(), log=log)
+               best_step=best["step"], meas=meas, sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(), log=log,
+               L_init=None if L_init is None else L_init.tolist())
     np.save(HERE / "spotr_out" / f"T_{sec}_s{seed}_{arm}.npy", best["T"].astype(np.float32))
     return out
 
