@@ -1,0 +1,9 @@
+/home/pedro/projects/SpOTr-workspace/SpOTr/experiments/night/82_contrast_sweep.py:94: RuntimeWarning: Mean of empty slice
+  f"   {d.mean():+6.1f} um ({(d > 0).sum()}/{len(d)})        {np.nanmean(auc):.2f}  {np.mean(rho):+.2f}")
+sigma  expression      shared   per-clade      random      oracle   per-clade-vs-shared (wins)   AUC   rho
+    0       531.4       356.8       355.6       373.8       363.2     +1.2 um (4/8)        nan  +0.72
+  150       585.1       401.0       384.5       403.5       401.9    +16.4 um (7/8)        0.63  +0.09
+  300       647.1       482.9       471.7       478.5       478.3    +11.3 um (7/8)        0.76  +0.46
+  500       768.9       623.1       601.5       607.4       612.7    +21.6 um (6/8)        0.76  +0.38
+  800       918.3       759.8       759.9       745.2       755.1     -0.1 um (5/8)        0.81  +0.46
+40 jobs in 906s

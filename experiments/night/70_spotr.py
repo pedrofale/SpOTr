@@ -130,7 +130,7 @@ def path_point(args):
 
 # ---------------------------------------------------------------- learner
 def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, eps_rel=0.05, device="cuda", log_every=1,
-          pair_groups=None, L_init=None, T_init=None):
+          pair_groups=None, L_init=None, T_init=None, learn_L=True):
     import torch
     torch.set_num_threads(1)
     dev = torch.device(device if torch.cuda.is_available() else "cpu"); DT = torch.float64
@@ -151,10 +151,10 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
     Jft = torch.as_tensor(Jf, device=dev)
     u = torch.tensor(float(np.log(a0 / (1 - a0))), dtype=DT, device=dev, requires_grad=learn_a)
     L_init = np.full(G_, float(X["L0"])) if L_init is None else np.asarray(L_init, float)   # start = prior centre
-    logL = torch.tensor(np.log(L_init), dtype=DT, device=dev, requires_grad=True)
+    logL = torch.tensor(np.log(L_init), dtype=DT, device=dev, requires_grad=learn_L)       # learn_L=False: L held
     logL0 = torch.tensor(np.log(L_init), dtype=DT, device=dev)                       # prior centre
     logLs = torch.tensor(float(np.log(X.get("Lx", X["L0"]))), dtype=DT, device=dev); c = float(X["c0"])   # pairs outside any group
-    params = ([u] if learn_a else []) + [logL]
+    params = ([u] if learn_a else []) + ([logL] if learn_L else [])
     opt = torch.optim.Adam(params, lr=lr)
     epsM = eps_rel * float(dc_std(X["M"]))
 
