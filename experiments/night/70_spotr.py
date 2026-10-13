@@ -130,7 +130,7 @@ def path_point(args):
 
 # ---------------------------------------------------------------- learner
 def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, eps_rel=0.05, device="cuda", log_every=1,
-          pair_groups=None, L_init=None):
+          pair_groups=None, L_init=None, T_init=None):
     import torch
     torch.set_num_threads(1)
     dev = torch.device(device if torch.cuda.is_available() else "cpu"); DT = torch.float64
@@ -184,7 +184,7 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
         pi = (pred * (nj / pred.sum(1, keepdim=True).clamp_min(1e-300)) + prior) / (nj + 1.0)
         return -(Nsp[J] * torch.log(pi.clamp_min(1e-300))).sum() / Nsp[J].sum()
 
-    Tstar = None; log = []; best = None
+    Tstar = None if T_init is None else np.asarray(T_init, float); log = []; best = None   # T_init: start of the exact solver
     for it in range(steps + 1):
         a = torch.sigmoid(u)
         W, WPhi = moments(logL)
