@@ -89,7 +89,10 @@ NUM = dict(section=SEC, seed=SEED, arm=ARM, cells=int(n), spots=int(m), anchor_s
                               largest=acc(np.full(m, np.bincount(true_lin[has], minlength=4).argmax()), true_lin)),
            clade_agree=dict(spotr=acc(inf_cl, true_cl), tangram=acc(tg_cl, true_cl), expression=acc(exp_cl, true_cl),
                             largest=acc(np.full(m, np.bincount(X["cl"], minlength=X["K"]).argmax()), true_cl)),
-           placement_error_um=dict(spotr=m70.err(T, X), tangram=m70.err(Ttg, X), expression=m70.err(Texp, X)))
+           placement_error_um=dict(spotr=m70.err(T, X), tangram=m70.err(Ttg, X), expression=m70.err(Texp, X),
+                                   fgw=min([r for r in json.load(open(HERE / "spotr_out" / "real.json"))
+                                            if r["arm"] == "path-fgw" and r["sec"] == SEC and r["seed"] == SEED][0]["path"],
+                                           key=lambda q: q["nll_val"])["err"]))
 print(json.dumps(NUM, indent=1))
 
 # ---------------------------------------------------------------- style
@@ -203,8 +206,8 @@ fig.text((x_b if SLIDE else x_c - 0.05) / FIG_W, 0.07 / FIG_H,
          f"{100 * la['tangram']:.0f}%, expression-only OT {100 * la['expression']:.0f}%, largest lineage {100 * la['largest']:.0f}%.\n"
          f"Dominant clade of the 18 right: {100 * ca['spotr']:.0f}%, {100 * ca['tangram']:.0f}%, {100 * ca['expression']:.0f}%, "
          f"{100 * ca['largest']:.0f}%.\n"
-         f"Median cell placement error: SpOTr {pe['spotr']:.0f} µm, Tangram {pe['tangram']:.0f} µm, expression-only OT "
-         f"{pe['expression']:.0f} µm.",
+         f"Median cell placement error: SpOTr {pe['spotr']:.0f} µm, FGW {pe['fgw']:.0f} µm, Tangram {pe['tangram']:.0f} µm, "
+         f"expression-only OT {pe['expression']:.0f} µm.",
          fontsize=8.5, color=INK2, ha="left", va="bottom", style="italic", linespacing=1.4)
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
