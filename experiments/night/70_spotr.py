@@ -96,6 +96,14 @@ def anchor_nll(T, X, J):
     return float(-(N * np.log(np.maximum(pi, 1e-300))).sum() / N.sum())
 
 
+def deconv_np(T, X, idx):
+    """anchor-free outer loss: each spot's expression predicted from the clade mix of the cells mapped to it and the
+    clades' mean expression (signatures from the dissociated cells); squared error per gene, scaled by sigma2"""
+    Y = np.eye(X["K"])[X["cl"]]; comp = T.T @ Y; comp = comp / np.maximum(comp.sum(1, keepdims=True), 1e-300)
+    R = comp[idx] @ X["W_sig"] - X["Y_spot"][idx]
+    return float((R ** 2).mean() / (2 * X["sigma2"]))
+
+
 def err(T, X):
     return float(np.median(np.linalg.norm(X["spots"][T.argmax(1)] - X["xy_true"], axis=1)))
 
@@ -130,7 +138,7 @@ def path_point(args):
 
 # ---------------------------------------------------------------- learner
 def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, eps_rel=0.05, device="cuda", log_every=1,
-          pair_groups=None, L_init=None, T_init=None, learn_L=True):
+          pair_groups=None, L_init=None, T_init=None, learn_L=True, outer="anchor"):
     import torch
     torch.set_num_threads(1)
     dev = torch.device(device if torch.cuda.is_available() else "cpu"); DT = torch.float64
@@ -147,7 +155,13 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
     pgt = torch.as_tensor(pg, device=dev)
     off = t(1.0 - np.eye(n))
     Y = t(np.eye(X["K"])[X["cl"]]); Nsp = t(X["Nspot"]); prior = Y.mean(0)
-    Jf = X["J"][: len(X["J"]) // 2]; Jv = X["J"][len(X["J"]) // 2:]
+    if outer == "deconv":                                       # no anchor: half the spots fit, half pick the step
+        Jf, Jv = X["deconv_fit"], X["deconv_val"]
+        Wsig_t, Ysp_t = t(X["W_sig"]), t(X["Y_spot"])
+        fit_loss = lambda T, J: deconv_np(T, X, J)
+    else:
+        Jf = X["J"][: len(X["J"]) // 2]; Jv = X["J"][len(X["J"]) // 2:]
+        fit_loss = lambda T, J: anchor_nll(T, X, J)
     Jft = torch.as_tensor(Jf, device=dev)
     u = torch.tensor(float(np.log(a0 / (1 - a0))), dtype=DT, device=dev, requires_grad=learn_a)
     L_init = np.full(G_, float(X["L0"])) if L_init is None else np.asarray(L_init, float)   # start = prior centre
@@ -179,7 +193,13 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
             g = epsM * lq - epsM * torch.logsumexp((f[:, None] - C) / epsM, dim=0)
         return torch.exp((f[:, None] + g[None, :] - C) / epsM)
 
+    def deconv(T, J):
+        comp = T.T @ Y; comp = comp / comp.sum(1, keepdim=True).clamp_min(1e-300)
+        return ((comp[J] @ Wsig_t - Ysp_t[J]) ** 2).mean() / (2 * X["sigma2"])
+
     def nll(T, J):
+        if outer == "deconv":
+            return deconv(T, J)
         pred = (T.T @ Y)[J]; nj = Nsp[J].sum(1, keepdim=True)
         pi = (pred * (nj / pred.sum(1, keepdim=True).clamp_min(1e-300)) + prior) / (nj + 1.0)
         return -(Nsp[J] * torch.log(pi.clamp_min(1e-300))).sum() / Nsp[J].sum()
@@ -193,8 +213,8 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
         s = float(dc_std(X["M"])) / (g0 - g0.mean(1, keepdim=True) - g0.mean(0, keepdim=True) + g0.mean()).std()
         Wn, WPn, an, sn = W.detach().cpu().numpy(), WPhi.detach().cpu().numpy(), float(a), float(s)
         Tstar = solve_exact(X["M"], Wn * sn, WPn * sn, D, D2, p, q, an, T0=Tstar)
-        rec = dict(step=it, a=an, err=err(Tstar, X), agree=agree(Tstar, X), nll_fit=anchor_nll(Tstar, X, Jf),
-                   nll_val=anchor_nll(Tstar, X, Jv), L=np.exp(logL.detach().cpu().numpy()).tolist())
+        rec = dict(step=it, a=an, err=err(Tstar, X), agree=agree(Tstar, X), nll_fit=fit_loss(Tstar, Jf),
+                   nll_val=fit_loss(Tstar, Jv), L=np.exp(logL.detach().cpu().numpy()).tolist())
         log.append(rec)
         if best is None or rec["nll_val"] < best["nll_val"]:
             best = dict(rec, T=Tstar.copy())
@@ -208,6 +228,67 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
         loss = nll(S, Jft) + ((logL - logL0) ** 2).sum() / (2 * prior_sd ** 2) / len(Jf)
         loss.backward(); opt.step()
     return log, best
+
+
+def learn_unrolled(X, groups, learn_a=True, a0=0.165, steps=60, lr=0.08, prior_sd=0.5, eps_rel=0.05, J_alt=3,
+                   T_sinkhorn=50, device="cuda"):
+    """The paper's learning scheme (spotr.make_step_fn_cladefgw), with this file's law-based tree term and per-group
+    L: an ENTROPIC map carried across steps (warm-started coupling and duals); each step runs J_alt rounds of
+    linearise-at-the-current-map then T_sinkhorn Sinkhorn iterations, and the anchor loss is differentiated through
+    all of them.  Returns the log, the step with the best validation anchor loss, and the last step."""
+    import torch
+    torch.set_num_threads(1)
+    dev = torch.device(device if torch.cuda.is_available() else "cpu"); DT = torch.float32
+    t = lambda A: torch.as_tensor(np.asarray(A, float), dtype=DT, device=dev)
+    n, m = X["M"].shape; D = X["D"]
+    Mt, Dt, D2t = t(X["M"]), t(D), t(D ** 2); pt, qt = t(np.ones(n) / n), t(X["q"]); lp, lq = pt.log(), qt.log()
+    NCt = t(X["NC"]) / (2 * np.pi * X["rho"])
+    G_ = int(groups.max()) + 1
+    same = X["cl"][:, None] == X["cl"][None, :]
+    pgt = torch.as_tensor(np.where(same, groups[:, None], G_), device=dev)
+    off = t(1.0 - np.eye(n))
+    Y = t(np.eye(X["K"])[X["cl"]]); Nsp = t(X["Nspot"]); prior = Y.mean(0)
+    Jf = X["J"][: len(X["J"]) // 2]; Jv = X["J"][len(X["J"]) // 2:]
+    u = torch.tensor(float(np.log(a0 / (1 - a0))), dtype=DT, device=dev, requires_grad=learn_a)
+    logL = torch.full((G_,), float(np.log(X["L0"])), dtype=DT, device=dev, requires_grad=True)
+    logL0 = torch.full((G_,), float(np.log(X["L0"])), dtype=DT, device=dev)
+    logLs = torch.tensor(float(np.log(X["L0"])), dtype=DT, device=dev); c = float(X["c0"])
+    opt = torch.optim.Adam(([u] if learn_a else []) + [logL], lr=lr)
+    eps = eps_rel * float(dc_std(X["M"]))
+
+    def nll(T, J):
+        pred = (T.T @ Y)[J]; nj = Nsp[J].sum(1, keepdim=True)
+        pi = (pred * (nj / pred.sum(1, keepdim=True).clamp_min(1e-30)) + prior) / (nj + 1.0)
+        return -(Nsp[J] * torch.log(pi.clamp_min(1e-30))).sum() / Nsp[J].sum()
+
+    T = torch.outer(pt, qt); f = torch.zeros(n, dtype=DT, device=dev); g = torch.zeros(m, dtype=DT, device=dev)
+    log, best = [], None
+    for it in range(steps + 1):
+        a = torch.sigmoid(u)
+        Lp = torch.exp(torch.cat([logL, logLs.reshape(1)]))[pgt]
+        R2 = Lp ** 2 + c * c * NCt
+        W = 2.0 / ((4 - np.pi) * R2) * off; WPhi = W * torch.sqrt(np.pi / 2 * R2)
+        T0 = torch.outer(pt, qt); g0 = 2.0 * (W @ T0 @ D2t - 2.0 * WPhi @ T0 @ Dt)
+        s = float(dc_std(X["M"])) / float((g0 - g0.mean(1, keepdim=True) - g0.mean(0, keepdim=True) + g0.mean()).std())
+        Tc, fc, gc = T.detach(), f.detach(), g.detach()
+        for _ in range(J_alt):                                  # rounds after the first see a T that depends on the parameters
+            Gc = (1 - a) * Mt + a * s * 2.0 * (W @ Tc @ D2t - 2.0 * WPhi @ Tc @ Dt)
+            for _ in range(T_sinkhorn):
+                fc = eps * lp - eps * torch.logsumexp((gc[None, :] - Gc) / eps, dim=1)
+                gc = eps * lq - eps * torch.logsumexp((fc[:, None] - Gc) / eps, dim=0)
+            Tc = torch.exp((fc[:, None] + gc[None, :] - Gc) / eps)
+        Tn = Tc.detach().cpu().numpy().astype(float)
+        rec = dict(step=it, a=float(a), err=err(Tn, X), nll_val=anchor_nll(Tn, X, Jv), L=np.exp(logL.detach().cpu().numpy()).tolist())
+        log.append(rec)
+        if best is None or rec["nll_val"] < best["nll_val"]:
+            best = dict(rec, T=Tn)
+        T, f, g = Tc.detach(), fc.detach(), gc.detach()
+        if it == steps:
+            break
+        opt.zero_grad()
+        loss = nll(Tc, torch.as_tensor(Jf, device=dev)) + ((logL - logL0) ** 2).sum() / (2 * prior_sd ** 2) / len(Jf)
+        loss.backward(); opt.step()
+    return log, best, dict(log[-1], T=Tn)
 
 
 def anchor_L(X, min_cells=5):

@@ -101,7 +101,7 @@ def build(sigma, gdraw):
         meas[lab] = float(np.sqrt(max(sum(a for a, _ in v) / sum(b for _, b in v), 1.0)))
     anchors = {cov: [np.random.default_rng(1000 * r + int(cov * 100)).choice(m, max(4, int(round(cov * m))), replace=False)
                      for r in range(5)] for cov in (0.2, 0.05)}
-    _C[key] = dict(m55=m55, M=M, D=D, q=q, NC=NC, rho=rho, grp=grp, cl=cl, K=K, Nspot=Nspot, xy_true=xy_d,
+    _C[key] = dict(m55=m55, M=M, D=D, q=q, NC=NC, rho=rho, grp=grp, cl=cl, K=K, Nspot=Nspot, xy_true=xy_d, Xsc=Xsc, Xst=Xst,
                    centres=centres, anchors=anchors, meas=meas, inB=inB, nB=int(tot), n=len(cells), m=m)
     return _C[key]
 
