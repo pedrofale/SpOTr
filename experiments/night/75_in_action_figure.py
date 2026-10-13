@@ -132,8 +132,6 @@ def spot_map(ax, colours, title, letter, sub=None, marks=None):
     ax.set_title(title, loc="left", fontsize=fs(11), fontweight="bold", pad=fs(18) if sub else fs(6))
     if sub:
         ax.text(0, 1.012, sub, transform=ax.transAxes, fontsize=fs(8.8), color=INK2, va="bottom", style="italic")
-    if not POSTER:
-        ax.text(-0.04, 1.0, letter, transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
 
 
 # a: the tree, branches coloured by lineage below the cut, backbone above it
@@ -157,8 +155,6 @@ ax.set_title(f"Lineage tree, {n:,} cells" if POSTER else f"Tree of the {n:,} dis
              fontsize=fs(11), fontweight="bold", pad=fs(18))
 ax.text(0, 1.012, "dissociated: no positions" if POSTER else "scRNA-seq with lineage barcodes, no positions",
         transform=ax.transAxes, fontsize=fs(8.8), color=INK2, va="bottom", style="italic")
-if not POSTER:
-    ax.text(-0.03, 1.0, "a", transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
 leaves = np.array(dg["leaves"])
 strip = fig.add_axes(frac(L_TREE + W_TREE + 0.04, 0.09))
 strip.imshow(np.array([matplotlib.colors.to_rgb(LIN_COL[lin[i]]) for i in leaves])[:, None, :], aspect="auto",
