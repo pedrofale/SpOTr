@@ -26,9 +26,12 @@ from scipy.spatial.distance import squareform
 
 HERE = Path(__file__).resolve().parent
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
-SLIDE = "--no-slide" not in sys.argv                         # --no-slide: drop the spatial-slide panel
-OUT = Path(ARGS[0]) if ARGS else HERE.parents[2] / "SpOTr-overleaf" / "figures" / (
-    "petracer_in_action.pdf" if SLIDE else "petracer_in_action_noslide.pdf")
+POSTER = "--poster" in sys.argv                              # --poster: no slide, no numbers, type x2, 39.4 cm wide
+SLIDE = "--no-slide" not in sys.argv and not POSTER          # --no-slide: drop the spatial-slide panel
+FS = 2.0 if POSTER else 1.0
+fs = lambda x: x * FS
+OUT = Path(ARGS[0]) if ARGS else HERE.parents[2] / "SpOTr-overleaf" / ("poster" if POSTER else "figures") / (
+    "petracer_in_action_poster.pdf" if POSTER else "petracer_in_action.pdf" if SLIDE else "petracer_in_action_noslide.pdf")
 SEC, SEED, ARM, CUT = "M3-4", 0, "per-clade", 32.0
 
 
@@ -97,7 +100,7 @@ print(json.dumps(NUM, indent=1))
 
 # ---------------------------------------------------------------- style
 plt.rcParams.update({"font.family": "Liberation Sans", "mathtext.fontset": "cm", "pdf.fonttype": 42,
-                     "axes.unicode_minus": False, "font.size": 9.5})
+                     "axes.unicode_minus": False, "font.size": 9.5 * FS})
 INK, INK2, BACKBONE = "#111111", "#4a4a4a", "#5a5a5a"
 LIN_COL = ["#2a78d6", "#eb6834", "#1baf7a", "#c9c8c2"]     # documented slots 1-3 (pass all-pairs) + grey "other"
 EMPTY = "#f1f0ec"
@@ -105,10 +108,14 @@ FIG_W = 911 / 72
 FIG_H = 5.7
 if not SLIDE:                                               # same scale, one panel fewer
     FIG_W = FIG_W - 2.12 - 0.24
-fig = plt.figure(figsize=(FIG_W, FIG_H))
-xy = X["spots"]; pitch = float(z["pitch"]); pad = pitch * 0.9
 W_MAP = 2.12                                                # inches per map panel
 L_TREE, W_TREE, BOT, H = 0.36, 2.45, 1.16, 3.9
+GAP = 0.24
+if POSTER:                                                  # two template columns: 39.4 cm
+    FIG_W, FIG_H, W_MAP, GAP = 39.38 / 2.54, 7.3, 2.95, 0.35
+    L_TREE, W_TREE, BOT, H = 0.45, 4.2, 1.05, 5.35
+fig = plt.figure(figsize=(FIG_W, FIG_H))
+xy = X["spots"]; pitch = float(z["pitch"]); pad = pitch * 0.9
 
 
 def frac(x0, w, y0=BOT, h=H):
@@ -122,10 +129,11 @@ def spot_map(ax, colours, title, letter, sub=None, marks=None):
         ax.scatter(xy[marks, 0], xy[marks, 1], s=7, color=INK, lw=0, zorder=4)
     ax.set_xlim(xy[:, 0].min() - pad, xy[:, 0].max() + pad); ax.set_ylim(xy[:, 1].min() - pad, xy[:, 1].max() + pad)
     ax.set_aspect("equal", adjustable="box"); ax.set_anchor("N"); ax.axis("off")
-    ax.set_title(title, loc="left", fontsize=11, fontweight="bold", pad=18 if sub else 6)
+    ax.set_title(title, loc="left", fontsize=fs(11), fontweight="bold", pad=fs(18) if sub else fs(6))
     if sub:
-        ax.text(0, 1.012, sub, transform=ax.transAxes, fontsize=8.8, color=INK2, va="bottom", style="italic")
-    ax.text(-0.04, 1.0, letter, transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
+        ax.text(0, 1.012, sub, transform=ax.transAxes, fontsize=fs(8.8), color=INK2, va="bottom", style="italic")
+    if not POSTER:
+        ax.text(-0.04, 1.0, letter, transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
 
 
 # a: the tree, branches coloured by lineage below the cut, backbone above it
@@ -137,18 +145,20 @@ for k, (a_, b_, h_, _) in enumerate(Z):
     la, lb = node_lin[int(a_)], node_lin[int(b_)]
     node_lin[n + k] = la if (la == lb and h_ <= CUT) else -1
 col_of = lambda k: LIN_COL[node_lin[k]] if node_lin[k] >= 0 else BACKBONE
-with plt.rc_context({"lines.linewidth": 0.45}):
+with plt.rc_context({"lines.linewidth": 0.45 * (1.4 if POSTER else 1.0)}):
     dg = dendrogram(Z, orientation="left", no_labels=True, ax=ax, link_color_func=col_of)
 ax.set_xlim(36.5, -0.5)
 ax.axvline(CUT, color=INK2, lw=0.9, ls=(0, (3, 2.5)), zorder=0)
 for s in ["top", "right", "left"]:
     ax.spines[s].set_visible(False)
 ax.set_yticks([]); ax.set_xticks([35, 30, 20, 10, 0])
-ax.set_xlabel(f"days before sampling\n(dashed: lineages cut at {CUT:.0f} days)", fontsize=9.5, linespacing=1.3)
-ax.set_title(f"Tree of the {n:,} dissociated cells", loc="left", fontsize=11, fontweight="bold", pad=18)
-ax.text(0, 1.012, "scRNA-seq with lineage barcodes, no positions", transform=ax.transAxes, fontsize=8.8, color=INK2,
-        va="bottom", style="italic")
-ax.text(-0.03, 1.0, "a", transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
+ax.set_xlabel(f"days before sampling\n(dashed: lineages cut at {CUT:.0f} days)", fontsize=fs(9.5), linespacing=1.3)
+ax.set_title(f"Lineage tree, {n:,} cells" if POSTER else f"Tree of the {n:,} dissociated cells", loc="left",
+             fontsize=fs(11), fontweight="bold", pad=fs(18))
+ax.text(0, 1.012, "dissociated: no positions" if POSTER else "scRNA-seq with lineage barcodes, no positions",
+        transform=ax.transAxes, fontsize=fs(8.8), color=INK2, va="bottom", style="italic")
+if not POSTER:
+    ax.text(-0.03, 1.0, "a", transform=ax.transAxes, fontsize=14, fontweight="bold", ha="right", va="bottom")
 leaves = np.array(dg["leaves"])
 strip = fig.add_axes(frac(L_TREE + W_TREE + 0.04, 0.09))
 strip.imshow(np.array([matplotlib.colors.to_rgb(LIN_COL[lin[i]]) for i in leaves])[:, None, :], aspect="auto",
@@ -177,7 +187,6 @@ if SLIDE:
     cax.text(0.5, -0.6, "expression PC1", transform=cax.transAxes, ha="center", va="top", fontsize=8, color=INK2)
 
 # c, d: true and inferred lineages
-GAP = 0.24
 x_c = x_b + W_MAP + GAP if SLIDE else x_b
 LET = "cde" if SLIDE else "bcd"
 ax_c = fig.add_axes(frac(x_c, W_MAP))
@@ -186,7 +195,7 @@ spot_map(ax_c, [LIN_COL[k] if h else EMPTY for k, h in zip(true_lin, has)], "Tru
 if not SLIDE:                                               # the scale bar lived in the slide panel
     x0, y0 = xy[:, 0].min(), xy[:, 1].min() - pad * 0.55
     ax_c.plot([x0, x0 + 500], [y0, y0], color=INK, lw=2, solid_capstyle="butt", clip_on=False)
-    ax_c.text(x0 + 250, y0 - pitch * 0.35, "500 µm", ha="center", va="top", fontsize=8.5)
+    ax_c.text(x0 + 250, y0 - pitch * 0.35, "500 µm", ha="center", va="top", fontsize=fs(8.5))
 ax_d = fig.add_axes(frac(x_c + W_MAP + GAP, W_MAP))
 spot_map(ax_d, [LIN_COL[k] if h else EMPTY for k, h in zip(tg_lin, has)], "Tangram", LET[1],
          sub="expression only")
@@ -198,11 +207,12 @@ spot_map(ax_e, [LIN_COL[k] if h else EMPTY for k, h in zip(inf_lin, has)], "SpOT
 la = NUM["lineage_agree"]; ca = NUM["clade_agree"]
 handles = [Rectangle((0, 0), 1, 1, color=c) for c in LIN_COL]
 labels = [f"clades {', '.join(sorted(cs, key=int))}" for cs in lin_clades[:3]] + [f"{len(set(grp)) - 3} smaller lineages"]
-fig.legend(handles, labels, loc="lower left", bbox_to_anchor=((x_c - 0.05) / FIG_W, 0.68 / FIG_H), ncol=4, frameon=False,
-           fontsize=9, handlelength=1.1, handletextpad=0.45, columnspacing=1.3)
+fig.legend(handles, labels, loc="lower left", bbox_to_anchor=((x_c - 0.05) / FIG_W, (0.05 if POSTER else 0.68) / FIG_H),
+           ncol=4, frameon=False, fontsize=fs(9), handlelength=1.1, handletextpad=0.45, columnspacing=1.3)
 pe = NUM["placement_error_um"]
-fig.text((x_b if SLIDE else x_c - 0.05) / FIG_W, 0.07 / FIG_H,
-         f"{len(held)} spots outside the anchor, dominant lineage right: SpOTr {100 * la['spotr']:.0f}%, Tangram "
+if not POSTER:
+  fig.text((x_b if SLIDE else x_c - 0.05) / FIG_W, 0.07 / FIG_H,
+           f"{len(held)} spots outside the anchor, dominant lineage right: SpOTr {100 * la['spotr']:.0f}%, Tangram "
          f"{100 * la['tangram']:.0f}%, expression-only OT {100 * la['expression']:.0f}%, largest lineage {100 * la['largest']:.0f}%.\n"
          f"Dominant clade of the 18 right: {100 * ca['spotr']:.0f}%, {100 * ca['tangram']:.0f}%, {100 * ca['expression']:.0f}%, "
          f"{100 * ca['largest']:.0f}%.\n"
