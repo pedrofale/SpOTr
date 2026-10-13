@@ -201,7 +201,7 @@ spot_map(ax_d, [LIN_COL[k] if h else EMPTY for k, h in zip(tg_lin, has)], "Tangr
          sub="expression only")
 ax_e = fig.add_axes(frac(x_c + 2 * (W_MAP + GAP), W_MAP))
 spot_map(ax_e, [LIN_COL[k] if h else EMPTY for k, h in zip(inf_lin, has)], "SpOTr", LET[2],
-         sub="expression + tree + anchor")
+         sub="expression + structure")
 
 # legend and the numbers, under c and d
 la = NUM["lineage_agree"]; ca = NUM["clade_agree"]
