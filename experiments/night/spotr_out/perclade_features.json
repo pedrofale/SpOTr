@@ -1,0 +1,270 @@
+{
+ "n_clades": 28,
+ "per_section": {
+  "M3-1": 11,
+  "M3-2": 6,
+  "M3-4": 11
+ },
+ "tests": [
+  {
+   "estimate": "learned L, shared start",
+   "feature": "EMT score (primary)",
+   "rho": 0.44482758620689666,
+   "p": 0.024859751402485974,
+   "lo": -0.00914330223332108,
+   "hi": 0.7314458560193593,
+   "n": 28,
+   "significant": true
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "true spatial spread",
+   "rho": 0.5689655172413794,
+   "p": 0.0032799672003279968,
+   "lo": 0.17818181818181822,
+   "hi": 0.8342464428387648,
+   "n": 28,
+   "significant": true
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "fitness (LBI)",
+   "rho": -0.3965517241379311,
+   "p": 0.04885951140488595,
+   "lo": -0.6964310198485244,
+   "hi": -0.0181737012987013,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "distance to tumour boundary",
+   "rho": 0.40689655172413813,
+   "p": 0.04187958120418796,
+   "lo": 0.04362425379498548,
+   "hi": 0.677541784055433,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "expression plasticity",
+   "rho": 0.31724137931034485,
+   "p": 0.11885881141188588,
+   "lo": -0.12971277409404372,
+   "hi": 0.6687706438622687,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "clade size",
+   "rho": -0.0068965517241379,
+   "p": 0.979420205797942,
+   "lo": -0.44111756826823384,
+   "hi": 0.4413603934996237,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "clade age",
+   "rho": 0.2551724137931035,
+   "p": 0.21279787202127978,
+   "lo": -0.17084279858166074,
+   "hi": 0.5877919775852706,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "EMT score (primary)",
+   "rho": 0.3586206896551724,
+   "p": 0.07540924590754093,
+   "lo": -0.058192636848054195,
+   "hi": 0.6838148243139267,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "true spatial spread",
+   "rho": 0.7206896551724138,
+   "p": 9.99990000099999e-05,
+   "lo": 0.3420015528681002,
+   "hi": 0.8806539504798999,
+   "n": 28,
+   "significant": true
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "fitness (LBI)",
+   "rho": -0.41379310344827575,
+   "p": 0.03908960910390896,
+   "lo": -0.7019882177306747,
+   "hi": 0.021951104335038017,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "distance to tumour boundary",
+   "rho": 0.35517241379310344,
+   "p": 0.07847921520784792,
+   "lo": -0.08022544170320348,
+   "hi": 0.713234501347709,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "expression plasticity",
+   "rho": 0.4793103448275862,
+   "p": 0.014739852601473985,
+   "lo": 0.037661952569528645,
+   "hi": 0.7640708452164892,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "clade size",
+   "rho": 0.010344827586206888,
+   "p": 0.966360336396636,
+   "lo": -0.4429974481341552,
+   "hi": 0.46893415906127756,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "clade age",
+   "rho": 0.6413793103448279,
+   "p": 0.0006999930000699993,
+   "lo": 0.23997826086956542,
+   "hi": 0.8774849849849847,
+   "n": 28,
+   "significant": true
+  },
+  {
+   "estimate": "true spread",
+   "feature": "EMT score (primary)",
+   "rho": 0.12413793103448276,
+   "p": 0.5523144768552315,
+   "lo": -0.2958408413274566,
+   "hi": 0.4782649482013215,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "true spread",
+   "feature": "fitness (LBI)",
+   "rho": -0.5103448275862069,
+   "p": 0.00927990720092799,
+   "lo": -0.7896915422222816,
+   "hi": -0.10872362400818543,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "true spread",
+   "feature": "distance to tumour boundary",
+   "rho": 0.18275862068965518,
+   "p": 0.3783762162378376,
+   "lo": -0.25623232046719596,
+   "hi": 0.5802057586541578,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "true spread",
+   "feature": "expression plasticity",
+   "rho": 0.3620689655172415,
+   "p": 0.07363926360736392,
+   "lo": -0.101907190209077,
+   "hi": 0.6914841880410518,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "true spread",
+   "feature": "clade size",
+   "rho": -0.027586206896551713,
+   "p": 0.9007909920900791,
+   "lo": -0.5053419889718822,
+   "hi": 0.4025772478887233,
+   "n": 28,
+   "significant": false
+  },
+  {
+   "estimate": "true spread",
+   "feature": "clade age",
+   "rho": 0.5275862068965519,
+   "p": 0.007049929500704993,
+   "lo": 0.11543545991905196,
+   "hi": 0.8817060111451395,
+   "n": 28,
+   "significant": true
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "  mesenchymal half (sensitivity)",
+   "rho": 0.624137931034483,
+   "p": 0.0010699893001069989,
+   "lo": 0.22800095197326808,
+   "hi": 0.879441344029764,
+   "n": 28,
+   "significant": null
+  },
+  {
+   "estimate": "learned L, shared start",
+   "feature": "  epithelial half (sensitivity)",
+   "rho": 0.14137931034482762,
+   "p": 0.4972150278497215,
+   "lo": -0.2500114259597806,
+   "hi": 0.4815383072603291,
+   "n": 28,
+   "significant": null
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "  mesenchymal half (sensitivity)",
+   "rho": 0.4379310344827587,
+   "p": 0.028159718402815972,
+   "lo": -0.0360909797585143,
+   "hi": 0.751344465908649,
+   "n": 28,
+   "significant": null
+  },
+  {
+   "estimate": "learned L, anchor start",
+   "feature": "  epithelial half (sensitivity)",
+   "rho": 0.03448275862068965,
+   "p": 0.8727412725872741,
+   "lo": -0.38571428571428573,
+   "hi": 0.4752324266701124,
+   "n": 28,
+   "significant": null
+  },
+  {
+   "estimate": "true spread",
+   "feature": "  mesenchymal half (sensitivity)",
+   "rho": 0.23103448275862074,
+   "p": 0.25993740062599374,
+   "lo": -0.17026779163609684,
+   "hi": 0.5858560093385703,
+   "n": 28,
+   "significant": null
+  },
+  {
+   "estimate": "true spread",
+   "feature": "  epithelial half (sensitivity)",
+   "rho": 0.10689655172413791,
+   "p": 0.6071739282607174,
+   "lo": -0.3333333333333333,
+   "hi": 0.504480298847468,
+   "n": 28,
+   "significant": null
+  }
+ ]
+}
