@@ -307,8 +307,15 @@ def shuffle_tree(X, seed):
 
 
 def job_real(args):
-    sec, seed, arm = args
-    X = data_real(sec, seed)
+    out = _job_real(args)
+    out["cov"] = args[3] if len(args) > 3 else 0.2
+    return out
+
+
+def _job_real(args):
+    sec, seed, arm = args[:3]
+    cov = args[3] if len(args) > 3 else 0.2                 # share of spots in the anchor (half fit, half validation)
+    X = data_real(sec, seed, cov)
     if arm == "path-law-shuffled":
         rows = [path_point((shuffle_tree(X, seed), "law", w)) for w in WGRID]
         for r in rows:                                      # placement is scored on the cells' TRUE positions anyway
@@ -339,7 +346,8 @@ def job_real(args):
     out = dict(sec=sec, seed=seed, arm=arm, err=best["err"], agree=best["agree"], a=best["a"], L=best["L"],
                best_step=best["step"], meas=meas, sizes=np.bincount(X["cl"], minlength=X["K"]).tolist(), log=log,
                L_init=None if L_init is None else L_init.tolist())
-    np.save(HERE / "spotr_out" / f"T_{sec}_s{seed}_{arm}.npy", best["T"].astype(np.float32))
+    tag = "" if cov == 0.2 else f"_c{int(round(cov * 100))}"
+    np.save(HERE / "spotr_out" / f"T_{sec}_s{seed}_{arm}{tag}.npy", best["T"].astype(np.float32))
     return out
 
 
@@ -362,7 +370,8 @@ if __name__ == "__main__":
     elif mode == "real":
         SEEDS = [int(x) for x in os.environ.get("SEEDS", "0,1").split(",")]
         ARMS = os.environ.get("ARMS", "path-fgw,path-law,weight,per-clade").split(",")
-        jobs = [(s, sd, arm) for s in ["M3-4", "M3-1", "M3-2"] for sd in SEEDS for arm in ARMS]
+        COVS = [float(x) for x in os.environ.get("COVS", "0.2").split(",")]
+        jobs = [(s, sd, arm, cv) for s in ["M3-4", "M3-1", "M3-2"] for sd in SEEDS for arm in ARMS for cv in COVS]
         with ctx.Pool(procs) as pool:
             res = pool.map(job_real, jobs)
         mode = os.environ.get("OUTNAME", mode)
