@@ -1,0 +1,115 @@
+# The simulation benchmark of the paper: simulated tumors, SpOTr and the other methods on each, and Figs. 2, S1, S2, S4 and S5.
+#   snakemake --cores 8 --resources gpu=1
+import os, json, sys
+from pathlib import Path
+
+configfile: "config.yaml"
+HERE = Path(workflow.basedir); sys.path.insert(0, str(HERE / "scripts")); import world
+OUT = config["out"]; PY = config["python"]; SEEDS = config["seeds"]; SP = config["spotr"]
+FIG = os.environ.get("SPOTR_FIGURES", str(HERE.parent / "figures"))
+STUDIES = world.studies(config); WEIGHTS = world.weight_worlds(config)
+WORLDS = {w: p for *_, w, p in STUDIES}; WORLDS.update({w: p for *_, w, p in WEIGHTS})
+BASE = world.world_id(world.params(config)); EX = config["example"]["seed"]
+ENV = "PYTHONNOUSERSITE=1 XLA_PYTHON_CLIENT_PREALLOCATE=false"
+SEED_DIR = f"{OUT}/worlds/{{wid}}/seed{{seed}}"
+
+wildcard_constraints:
+    wid="[0-9a-f]{10}", seed="[0-9]+", method="|".join(config["methods"])
+
+
+def benchmark(name):
+    return [f"{OUT}/worlds/{w}/seed{s}/{name}" for *_, w, _ in STUDIES for s in SEEDS]
+
+
+rule all:
+    input:
+        expand(f"{FIG}/{{f}}.pdf", f=["fig_sim_benchmark", "fig_sim_metrics", "fig_sim_tissue", "fig_alpha_elbow", "fig_options"]),
+        f"{OUT}/worlds/{BASE}/seed{config['tuning_seed']}/spotr_tuning.json"
+
+rule params:
+    output: f"{OUT}/worlds/{{wid}}/params.json"
+    run:
+        json.dump(WORLDS[wildcards.wid], open(output[0], "w"), indent=1)
+
+rule layout:
+    input: rules.params.output
+    output: f"{SEED_DIR}/layout.npz"
+    log: f"{SEED_DIR}/logs/layout.log"
+    shell: "{ENV} {PY[spotr]} scripts/layout.py {input} {wildcards.seed} {output} > {log} 2>&1"
+
+rule simulate:
+    input: params=rules.params.output, layout=rules.layout.output
+    output: f"{SEED_DIR}/sim.npz"
+    log: f"{SEED_DIR}/logs/simulate.log"
+    shell: "{ENV} {PY[cassiopeia]} scripts/simulate.py {input.params} {wildcards.seed} {input.layout} {output} > {log} 2>&1"
+
+rule express:
+    input: params=rules.params.output, sim=rules.simulate.output, layout=rules.layout.output
+    output: f"{SEED_DIR}/problem.npz"
+    log: f"{SEED_DIR}/logs/express.log"
+    shell: "{ENV} {PY[spotr]} scripts/express.py {input.params} {wildcards.seed} {input.sim} {input.layout} {output} > {log} 2>&1"
+
+rule tree:
+    input: sim=rules.simulate.output, problem=rules.express.output
+    output: f"{SEED_DIR}/trees.npz"
+    log: f"{SEED_DIR}/logs/tree.log"
+    shell: "{ENV} {PY[spotr]} scripts/tree.py {input.sim} {input.problem} {output} > {log} 2>&1"
+
+rule spotr:                                      # Fig. 2: SpOTr at the paper's alpha and beta
+    input: rules.express.output, rules.tree.output
+    output: f"{SEED_DIR}/spotr.npz"
+    log: f"{SEED_DIR}/logs/spotr.log"
+    resources: gpu=1
+    shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py fit {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {output} --alpha {SP[alpha]} --beta {SP[beta]} > {log} 2>&1"
+
+rule spotr_grid:                                 # Fig. S4: over alpha, on the example world
+    input: rules.express.output, rules.tree.output
+    output: f"{SEED_DIR}/spotr_grid.npz"
+    log: f"{SEED_DIR}/logs/spotr_grid.log"
+    params: alphas=",".join(str(a) for a in config["alpha_grid"])
+    resources: gpu=1
+    shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py grid {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {output} --alphas {params.alphas} --beta {SP[beta]} > {log} 2>&1"
+
+rule spotr_weights:                              # Fig. S5: weight 0 on the dispersed clones
+    input: rules.express.output, rules.tree.output
+    output: f"{SEED_DIR}/spotr_weights.npz"
+    log: f"{SEED_DIR}/logs/spotr_weights.log"
+    resources: gpu=1
+    shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py weights {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {output} --alpha {SP[alpha]} --beta {SP[beta]} > {log} 2>&1"
+
+rule spotr_tuning:                               # the choice of alpha and beta, on a seed of the base world that the benchmark does not score
+    input: rules.express.output, rules.tree.output
+    output: f"{SEED_DIR}/spotr_tuning.json"
+    log: f"{SEED_DIR}/logs/spotr_tuning.log"
+    params: alphas=",".join(str(a) for a in config["tuning"]["alpha"]), betas=",".join(str(b) for b in config["tuning"]["beta"]),
+            npz=lambda wc: f"{OUT}/worlds/{wc.wid}/seed{wc.seed}/spotr_tuning.npz"
+    resources: gpu=1
+    shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py tuning {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {params.npz} --alphas {params.alphas} --betas {params.betas} > {log} 2>&1"
+
+rule baseline:
+    input: rules.express.output, rules.tree.output
+    output: f"{SEED_DIR}/{{method}}.npz"
+    log: f"{SEED_DIR}/logs/{{method}}.log"
+    params: epochs=lambda wc: config["c2l_epochs"] if wc.method == "c2l" else config["tangram_epochs"]
+    resources: gpu=lambda wc: 1 if wc.method in ("c2l", "destvi", "tangram") else 0
+    shell: "{ENV} {PY[spotr]} scripts/fit_baselines.py {wildcards.method} {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {wildcards.seed} {output} --epochs {params.epochs} > {log} 2>&1"
+
+rule fig_benchmark:                              # Figs. 2 and S1
+    input: benchmark("spotr.npz"), [f"{OUT}/worlds/{w}/seed{s}/{m}.npz" for *_, w, _ in STUDIES for s in SEEDS for m in config["methods"]]
+    output: f"{FIG}/fig_sim_benchmark.pdf", f"{FIG}/fig_sim_metrics.pdf"
+    shell: "{ENV} {PY[spotr]} scripts/fig_benchmark.py"
+
+rule fig_tissue:                                 # Fig. S2
+    input: f"{OUT}/worlds/{BASE}/seed{EX}/problem.npz"
+    output: f"{FIG}/fig_sim_tissue.pdf"
+    shell: "{ENV} {PY[spotr]} scripts/fig_tissue.py"
+
+rule fig_alpha:                                  # Fig. S4
+    input: [f"{OUT}/worlds/{BASE}/seed{s}/spotr_grid.npz" for s in SEEDS]
+    output: f"{FIG}/fig_alpha_elbow.pdf"
+    shell: "{ENV} {PY[spotr]} scripts/fig_alpha.py"
+
+rule fig_weights:                                # Fig. S5
+    input: [f"{OUT}/worlds/{w}/seed{s}/spotr_weights.npz" for *_, w, _ in WEIGHTS for s in SEEDS]
+    output: f"{FIG}/fig_options.pdf"
+    shell: "{ENV} {PY[spotr]} scripts/fig_weights.py"

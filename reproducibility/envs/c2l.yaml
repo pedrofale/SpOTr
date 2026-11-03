@@ -1,0 +1,10 @@
+# cell2location (pyro-ppl 1.9.2 breaks its import).
+name: c2l
+channels: [conda-forge]
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - cell2location==0.1.5
+    - pyro-ppl==1.9.1
+    - scvi-tools==1.3.3

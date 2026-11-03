@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "clonespotr"
+version = "0.1.0"
+description = "Tree and space-aware optimal transport for mapping dissociated cancer cells to spatial transcriptomics spots."
+authors = ["pedrofale <pedro.miguel.ferreira.pf@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/pedrofale/spotr"
+packages = [{include = "spotr", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+numpy = ">=1.24"
+scipy = ">=1.10"
+pandas = ">=2.0"
+anndata = ">=0.10"
+jax = ">=0.4.31,<0.7"
+jaxlib = ">=0.4.31,<0.7"
+optax = ">=0.2"
+networkx = {version = ">=3.0", optional = true}
+scanpy = {version = ">=1.9", optional = true}
+squidpy = {version = ">=1.4", optional = true}
+cell2location = {version = ">=0.1.4", optional = true}
+
+[tool.poetry.extras]
+tree = ["networkx"]
+plot = ["scanpy", "squidpy"]
+c2l = ["cell2location"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
