@@ -1,0 +1,6 @@
+name: snakemake
+channels: [conda-forge, bioconda]
+dependencies:
+  - python=3.12
+  - snakemake=9.6.2
+  - pyyaml

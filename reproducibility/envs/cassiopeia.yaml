@@ -1,0 +1,9 @@
+# Cassiopeia, for the simulated lineages (the PyPI release 1.0.4 does not build).
+name: cassiopeia
+channels: [conda-forge]
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - numpy==1.26.4
+    - "cassiopeia-lineage[spatial] @ git+https://github.com/YosefLab/Cassiopeia@1ee5959eb9d3f8d4d26e2af5678234493bf54d6d"

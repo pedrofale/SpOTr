@@ -1,0 +1,59 @@
+# The simulation benchmark of the paper (Fig. 2; Figs. S1, S2, S4, S5).  Every world is the base world with one parameter changed.
+
+python:                       # the Python of each environment (see ../README.md)
+  spotr: python               # benchmark_env: SpOTr, DestVI, Tangram, scDOT, POT, scCube
+  cassiopeia: python          # cassiopeia: the lineages
+out: results                  # relative to this folder
+seeds: [1, 2]                 # the benchmark's seeds
+tuning_seed: 3                # the base world's seed on which SpOTr's settings were chosen (not scored)
+
+base:
+  # lineage (Cassiopeia)
+  n_cells: 12000              # tumor cells, the leaves of the tree
+  fitness_rate: 0.2           # BirthDeathFitnessSimulator: fitness changes at this rate per division,
+  fitness_sd: 0.1             # by Normal(0, fitness_sd)
+  death_scale: 5.0            # death waiting time ~ Exponential(death_scale)
+  cassettes: 13               # Cas9LineageTracingDataSimulator: cassettes x sites,
+  sites: 3
+  barcode_saturation: 0.5     # with this expected share of the sites edited at the leaves
+  n_clones: 5                 # the clones: the clades at the earliest time the tree has n_clones clades with at least clone_min of the cells
+  clone_min: 0.03
+  migrate: 0.0                # share of the clones dispersed over the section
+  # tissue (scCube's tumor-microenvironment layout)
+  nests: 9                    # oval tumor nests
+  nest_purity: 0.9            # share of tumor cells in a nest
+  aggregates: 3               # aggregates of the second non-tumor type in the stroma
+  vessels: 0.15               # share of the third non-tumor type in the stroma
+  cell_spacing: 5.0           # um between neighbouring cells
+  territory_jitter: 1.0       # sd (radians) of the turn of each territory cut away from the principal axis
+  # expression
+  genes: 2000
+  programs: 5
+  sigma_tree: 0.06            # strength of the heritable programs
+  sigma_space: 0.1            # strength of the positional programs
+  length_scale: 0.25          # of the positional programs, as a share of the section's diameter
+  library: 1000               # mean counts per cell
+  # measurement
+  spot_diameter: 55.0         # um; Visium spots
+  spot_spacing: 100.0         # um, on a hexagonal lattice
+  capture: 0.25               # share of the dissociated half that is sequenced
+  traced: 0.7                 # share of the sequenced tumor cells whose lineage is read
+
+studies:                      # Fig. 2D-F
+  heritable:
+    vary: {sigma_tree: [0.03, 0.06, 0.1, 0.3]}
+  migration:
+    vary: {migrate: [0.0, 0.2, 0.4]}
+  clones:
+    vary: {n_clones: [3, 5, 10]}
+weights:                      # Fig. S5: the dispersed-clone worlds of the migration study, and the same with distinct clone expression
+  migrate: [0.2, 0.4]
+  sigma_tree: [0.06, 0.3]
+
+methods: [c2l, destvi, tangram, scdot, exact_ot, fgw]
+spotr: {alpha: 0.2, beta: 0.5}
+alpha_grid: [0.0, 0.1, 0.2, 0.4, 0.95]            # Fig. S4, on the example world
+tuning: {alpha: [0.0, 0.1, 0.2, 0.3, 0.4], beta: [0.25, 0.5, 0.75]}
+example: {sigma_tree: 0.06, seed: 1}             # the example world of Figs. 2A-C, S2 and S4: the base world
+c2l_epochs: 30000
+tangram_epochs: 1000

@@ -1,7 +1,0 @@
-real_anclaw: 48 jobs in 876s
-/home/pedro/miniconda3/envs/benchmark_env/lib/python3.10/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 2 leaked semaphore objects to clean up at shutdown
-  warnings.warn('resource_tracker: There appear to be %d '
-/home/pedro/miniconda3/envs/benchmark_env/lib/python3.10/multiprocessing/resource_tracker.py:237: UserWarning: resource_tracker: '/mp-irkhgoja': [Errno 2] No such file or directory
-  warnings.warn('resource_tracker: %r: %s' % (name, e))
-/home/pedro/miniconda3/envs/benchmark_env/lib/python3.10/multiprocessing/resource_tracker.py:237: UserWarning: resource_tracker: '/mp-fgo37lzq': [Errno 2] No such file or directory
-  warnings.warn('resource_tracker: %r: %s' % (name, e))

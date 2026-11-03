@@ -1,8 +1,0 @@
-results/
-results_smoke/
-.snakemake/
-__pycache__/
-results_calibrate/
-benchmark_run.log
-results_v1_randomME/
-results_*/

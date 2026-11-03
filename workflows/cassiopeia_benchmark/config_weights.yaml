@@ -1,9 +1,0 @@
-# Clade weights where expression can place the released clades (2026-11-03; 471_ strong): dispersed clones with distinct clone expression
-# (sigma_tree 0.3), one and two of five clones dispersed; built beside the benchmark's worlds, not part of Fig. 2.
-study_set: weights
-studies_weights:
-  weights_demo:
-    fix: {sigma_tree: 0.3}
-    vary: {migrate: [0.2, 0.4]}
-    baselines: []
-example: {study: weights_demo, value: 0.4, seed: 1}
