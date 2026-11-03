@@ -2,8 +2,8 @@
 
 (A) A UMAP of the dissociated cells of the example tumor (the base world, seed 1), the tumor cells by clone and the non-tumor cells in beige.
 (B) Its Visium spots, each colored in two levels: non-tumor where the spot's non-tumor cells outnumber its tumor cells, otherwise its majority
-    clone.  (C) The same from SpOTr (non-tumor against tumor from its deconvolution, the clones from its map) and from scDOT (from its map of every
-    dissociated cell).
+    clone.  (C) The same from SpOTr (non-tumor against tumor from its deconvolution, the clones from its map) and from cell2location (from its
+    abundances of each label, the clones through the true clones of each label's cells).
 (D-F) The per-clone Pearson correlation between each clone's true and estimated share of the spots (common/metrics.py, clones with at least 20
     cells), the clones of both seeds pooled, one box per method, against the strength of the heritable programs (D), the number of dispersed
     clones (E) and the number of clones (F).
@@ -103,8 +103,9 @@ def main():
     s = np.load(d / "spotr.npz", allow_pickle=True); P = s["proportions"].astype(float); lab = [str(x) for x in s["labels"]]; me = [i for i, l in enumerate(lab) if l.startswith("me")]
     ax = fig.add_subplot(gs[0, 6:9]); panels.append((ax, "C"))
     draw(ax, two_level(P[:, me].sum(1), np.delete(P, me, axis=1).sum(1), s["phi"].astype(float).T @ oh), "SpOTr")
-    Pd = np.load(d / "scdot.npz")["P"].astype(float); Pd = Pd / np.maximum(Pd.sum(1, keepdims=True), 1e-300)
-    axC = fig.add_subplot(gs[0, 9:12]); panels.append((axC, "")); draw(axC, two_level(Pd[~tu].sum(0), Pd[tu].sum(0), Pd[tr].T @ oh), "scDOT")
+    z = np.load(d / "c2l.npz", allow_pickle=True); W = z["w"].astype(float); mw = [i for i, t in enumerate(z["types"]) if str(t).startswith("me")]
+    axC = fig.add_subplot(gs[0, 9:12]); panels.append((axC, ""))
+    draw(axC, two_level(W[:, mw].sum(1), np.delete(W, mw, axis=1).sum(1), world.masses(d)[0]["cell2location"]), "cell2location")
     hd = [Line2D([], [], ls="", marker="o", ms=8, color=ccol[k], label=f"clone {k + 1}") for k in range(K - 1)]
     hd += [Line2D([], [], ls="", marker="o", ms=8, color=ccol[K - 1], label="smaller clones, pooled"), Line2D([], [], ls="", marker="o", ms=8, color=NT, label="non-tumor cells")]
     table = world.studies(cfg); w_ = 0.8 / len(METHODS)
