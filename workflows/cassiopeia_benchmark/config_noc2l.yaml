@@ -1,0 +1,8 @@
+# While the method and the results are still being iterated, cell2location (15+ minutes per world on a shared GPU) is left out
+# (Pedro, 2026-10-31: "let's not wait for cell2location to run while we are iterating. We can do that after we've converged on method and
+# results story").  Layer on config.yaml:  snakemake ... --configfile config.yaml config_noc2l.yaml ; drop this file for the final run.
+studies:
+  heritable:
+    baselines: [destvi, tangram, exact_ot]
+  positional:
+    baselines: [destvi, tangram, exact_ot]

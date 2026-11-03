@@ -1,0 +1,10 @@
+# Calibration of the expression strength on full-size worlds (choose the studies' ranges), layered on config.yaml with
+#   snakemake --cores 8 --resources gpu=1 --configfile config.yaml config_calibrate.yaml
+out: results_calibrate
+seeds: [1]
+study_set: calibrate
+studies_calibrate:
+  heritable:
+    vary: {sigma_tree: [0.5, 1.0, 2.0, 4.0]}
+    baselines: [exact_ot]
+example: {study: heritable, value: 2.0, seed: 1}

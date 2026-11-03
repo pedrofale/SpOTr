@@ -1,0 +1,163 @@
+# SpOTr's simulation benchmark and ablations on Cassiopeia-simulated lineages.  See README.md.
+#   snakemake --cores 8 --resources gpu=1                  # everything in config.yaml
+#   snakemake --cores 8 --resources gpu=1 --configfile config.yaml config_smoke.yaml   # a small end-to-end check
+import json, hashlib
+from pathlib import Path
+
+configfile: "config.yaml"
+OUT = config["out"]; PY = config["python"]; SRC = str(Path(config["src"]).resolve()); SEEDS = config["seeds"]
+ARMS = ",".join(config["arms"] + config.get("ablation_arms", []))
+
+
+STUDIES = config[f"studies_{config['study_set']}"] if config.get("study_set") else config["studies"]   # config files merge recursively, so a
+                                                                                                        # smaller study set has its own key
+
+
+def world_params(study, knob, value):
+    p = dict(config["base"]); p.update(STUDIES[study].get("fix", {})); p[knob] = value; return p
+
+
+def wid(p):
+    return hashlib.sha1(json.dumps(p, sort_keys=True).encode()).hexdigest()[:10]
+
+
+TABLE, WORLDS, BASELINES = [], {}, {}
+for study, spec in STUDIES.items():
+    (knob, values), = spec["vary"].items()
+    for v in values:
+        p = world_params(study, knob, v); w = wid(p); WORLDS[w] = p; TABLE.append((study, knob, v, w)); BASELINES.setdefault(w, set()).update(spec.get("baselines", []))
+ex = config["example"]; EX_WORLD = next(w for st, k, v, w in TABLE if st == ex["study"] and v == ex["value"])
+wildcard_constraints:
+    wid="[0-9a-f]{10}", seed="[0-9]+", method="exact_ot|tangram"
+
+
+def per_world(name):
+    return [f"{OUT}/worlds/{w}/seed{s}/{name}" for w in WORLDS for s in SEEDS]
+
+
+rule all:
+    input: f"{OUT}/summary.csv", f"{OUT}/figures/fig_benchmark.pdf"
+
+rule params:
+    output: f"{OUT}/worlds/{{wid}}/params.json"
+    run:
+        json.dump(WORLDS[wildcards.wid], open(output[0], "w"), indent=1)
+
+rule layout:                                     # scCube: the tissue layout (tumour nests, stroma, T-cell aggregates, vessels)
+    input: rules.params.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/layout.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/layout.log"
+    params: py=PY["spotr"]
+    shell: "PYTHONNOUSERSITE=1 {params.py} scripts/layout.py {input} {wildcards.seed} {output} > {log} 2>&1"
+
+rule simulate:                                   # Cassiopeia: tree, barcodes, positions, clones
+    input: params=rules.params.output, layout=rules.layout.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/sim.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/simulate.log"
+    params: py=PY["cassiopeia"]
+    shell: "PYTHONNOUSERSITE=1 {params.py} scripts/simulate.py {input.params} {wildcards.seed} {input.layout} {output} > {log} 2>&1"
+
+rule express:                                    # our expression layer, the microenvironment, the section's spots and the dissociated sample
+    input: params=rules.params.output, sim=rules.simulate.output, layout=rules.layout.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/problem.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/express.log"
+    params: py=PY["spotr"]
+    shell: "{params.py} scripts/express.py {input.params} {wildcards.seed} {input.sim} {input.layout} {output} > {log} 2>&1"
+
+rule trees:                                      # Cassiopeia: the true and the reconstructed tree of the traced dissociated cells
+    input: params=rules.params.output, sim=rules.simulate.output, problem=rules.express.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/trees.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/trees.log"
+    params: py=PY["cassiopeia"]
+    shell: "PYTHONNOUSERSITE=1 {params.py} scripts/trees.py {input.params} {input.sim} {input.problem} {output} > {log} 2>&1"
+
+rule spotr:                                      # SpOTr, clone labels and tree, at the fixed alpha (config spotr_alpha)
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: npz=f"{OUT}/worlds/{{wid}}/seed{{seed}}/spotr.npz", json=f"{OUT}/worlds/{{wid}}/seed{{seed}}/spotr.json"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/spotr.log"
+    params: py=PY["spotr"], alpha=config["spotr_alpha"]
+    resources: gpu=1
+    shell: "PYTHONPATH={SRC} XLA_PYTHON_CLIENT_PREALLOCATE=false {params.py} scripts/fit_spotr.py {input.params} {input.problem} {input.trees} {params.alpha} {output.npz} > {log} 2>&1"
+
+rule spotr_grid:                                 # SpOTr over the alpha grid, each arm at its elbow (the overnight run; config spotr_alphas)
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: npz=f"{OUT}/worlds/{{wid}}/seed{{seed}}/spotr_grid.npz", json=f"{OUT}/worlds/{{wid}}/seed{{seed}}/spotr_grid.json"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/spotr_grid.log"
+    params: py=PY["spotr"], alphas=",".join(str(a) for a in config["spotr_alphas"])
+    resources: gpu=1
+    shell: "PYTHONPATH={SRC} XLA_PYTHON_CLIENT_PREALLOCATE=false {params.py} scripts/fit_spotr.py {input.params} {input.problem} {input.trees} {params.alphas} {output.npz} > {log} 2>&1"
+
+rule c2l:                                        # cell2location, the package
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/c2l.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/c2l.log"
+    params: py=PY["c2l"], epochs=config["c2l_epochs"]
+    resources: gpu=1
+    shell: "PYTHONNOUSERSITE=1 {params.py} scripts/fit_c2l.py {input.params} {input.problem} {input.trees} {params.epochs} {output} > {log} 2>&1"
+
+rule destvi:                                     # DestVI, as published (CondSCVI then DestVI)
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/destvi.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/destvi.log"
+    params: py=PY["spotr"]
+    resources: gpu=1
+    shell: "{params.py} scripts/fit_destvi.py {input.params} {input.problem} {input.trees} {wildcards.seed} {output} > {log} 2>&1"
+
+rule baseline:                                   # exact OT, Tangram
+    input: rules.express.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/{{method}}.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/{{method}}.log"
+    params: py=PY["spotr"], epochs=config["tangram_epochs"]
+    resources: gpu=lambda wc: 1 if wc.method == "tangram" else 0
+    shell: "{params.py} scripts/fit_baselines.py {input} {wildcards.method} {params.epochs} {wildcards.seed} {output} > {log} 2>&1"
+
+
+rule scdot:                                      # scDOT, upstream unmodified, its own map (benchmark/packages.py)
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/scdot.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/scdot.log"
+    params: py=PY["spotr"]
+    shell: "CUDA_VISIBLE_DEVICES= {params.py} scripts/fit_scdot.py {input.params} {input.problem} {input.trees} {wildcards.seed} {output} > {log} 2>&1"
+
+rule fgw:                                        # FGW with SpOTr's distance matrices, uniform spot capacities
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/fgw.npz"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/fgw.log"
+    params: py=PY["spotr"]
+    shell: "{params.py} scripts/fit_fgw.py {input.params} {input.problem} {input.trees} {output} > {log} 2>&1"
+
+def score_inputs(wc):
+    d = f"{OUT}/worlds/{wc.wid}/seed{wc.seed}"
+    return dict(params=f"{OUT}/worlds/{wc.wid}/params.json", problem=f"{d}/problem.npz", trees=f"{d}/trees.npz", spotr=f"{d}/spotr.npz",
+                extra=[f"{d}/{b}.npz" for b in sorted(BASELINES[wc.wid])])
+
+rule score:
+    input: unpack(score_inputs)
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/scores.json"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/score.log"
+    params: py=PY["spotr"]
+    shell: "PYTHONPATH={SRC} JAX_PLATFORMS=cpu {params.py} scripts/score.py {input.params} {input.problem} {input.trees} {input.spotr} {output} {input.extra} > {log} 2>&1"
+
+rule readout:                                    # the lineage-resolution readout, against the truth
+    input: params=rules.params.output, problem=rules.express.output, trees=rules.trees.output, spotr=rules.spotr.output.npz
+    output: f"{OUT}/worlds/{{wid}}/seed{{seed}}/readout.json"
+    log: f"{OUT}/worlds/{{wid}}/seed{{seed}}/logs/readout.log"
+    params: py=PY["spotr"]
+    shell: "{params.py} scripts/readout.py {input.params} {input.problem} {input.trees} {input.spotr} {output} > {log} 2>&1"
+
+rule table:
+    output: f"{OUT}/worlds_table.json"
+    run:
+        json.dump(TABLE, open(output[0], "w"), indent=1)
+
+rule aggregate:
+    input: table=rules.table.output, scores=per_world("scores.json"), readouts=per_world("readout.json")
+    output: f"{OUT}/summary.csv"
+    params: py=PY["spotr"]
+    shell: "{params.py} scripts/aggregate.py {input.table} {OUT} {output}"
+
+rule figures:
+    input: summary=rules.aggregate.output, example=f"{OUT}/worlds/{EX_WORLD}/seed{ex['seed']}/scores.json"
+    output: f"{OUT}/figures/fig_benchmark.pdf", f"{OUT}/figures/fig_ablation.pdf", f"{OUT}/figures/fig_example.pdf"
+    params: py=PY["spotr"], exdir=f"{OUT}/worlds/{EX_WORLD}/seed{ex['seed']}"
+    shell: "PYTHONPATH={SRC} {params.py} scripts/figures.py {input.summary} {OUT} {params.exdir} {OUT}/figures"

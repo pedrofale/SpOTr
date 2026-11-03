@@ -30,7 +30,7 @@ def tangram(Xsc, Xst, q, seed, epochs=1000, lambda_d=1.0):
     tg.pp_adatas(a_sc, a_sp, genes=None)
     a_sp.obs["rna_count_based_density"] = np.asarray(q, float) / np.sum(q)   # 1.0.4 cannot take an array prior
     amap = tg.map_cells_to_space(a_sc, a_sp, mode="cells", density_prior="rna_count_based", lambda_d=lambda_d,
-                                 num_epochs=epochs, device="cuda", random_state=seed, verbose=False)
+                                 num_epochs=epochs, device=__import__("os").environ.get("TANGRAM_DEVICE", "cuda"), random_state=seed, verbose=False)
     return np.asarray(amap.X, float)
 
 

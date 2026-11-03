@@ -1,0 +1,72 @@
+# Simulation benchmark and ablations for SpOTr on Cassiopeia-simulated lineages (see README.md).
+# Every world is the `base` world with the knobs of one study changed; identical worlds are simulated once.
+
+python:                       # one environment per engine (README.md: Environments)
+  spotr: /home/pedro/miniconda3/envs/benchmark_env/bin/python
+  cassiopeia: /home/pedro/miniconda3/envs/cassiopeia/bin/python
+  c2l: /home/pedro/miniconda3/envs/c2l/bin/python
+src: ../../src                # SpOTr's package (spotr.c2l_gw), relative to this folder
+out: results_territories      # the target scenario (2026-11-02, night; vault section 190); results_visium2/: the calibrated run, stopped; results_visium/: the first Visium run, results/: square spots
+seeds: [1, 2]
+
+base:
+  # lineage and space (Cassiopeia)
+  n_cells: 12000              # tumour cells: the leaves of the tree (12,000 at real density: about 400 Visium spots)
+  fitness_sd: 0.1             # BirthDeathFitnessSimulator: fitness changes ~ Normal(0, fitness_sd), at rate fitness_rate per division
+  fitness_rate: 0.2           # (weak selection: clones of even size; 0.25 before 2026-11-02 let one clone hold 40-70% of the cells)
+  death_scale: 5.0            # death waiting time ~ Exponential(death_scale); a lineage that dies out is redrawn
+  cassettes: 13               # Cas9LineageTracingDataSimulator: cassettes x sites
+  sites: 3
+  barcode_saturation: 0.5     # expected share of edited sites at the leaves (sets the edit rate)
+  spatial: territories        # territories: the tumour sites cut along the tree, every clade a nested territory (tree-space Spearman ~0.5);
+                              # clonal: ClonalSpatialDataSimulator, brownian: BrownianSpatialDataSimulator (both ~0.1-0.2 once on the tissue)
+  territory_jitter: 1.0       # sd of the angle (radians) by which each cut turns away from the principal axis
+  migrate: 0.0                # share of the clones whose cells swap places with random cells of the section (0: every clone in its territory)
+  n_clones: 5                 # clones: the clades at the earliest cut of the tree where exactly n_clones clades hold at least clone_min of the
+                              # cells (Pedro, 2026-11-02: "use something like 4 or 5"); smaller clades pooled (clone_founders: the older cut)
+  clone_min: 0.03
+  # expression (ours: README.md, The expression layer)
+  genes: 2000                 # (Pedro, 2026-11-02: "Focus on simulating data with 2k genes"; depth unchanged)
+  programs: 5
+  sigma_tree: 0.06            # heritable programs: Brownian motion along the tree, variance sigma_tree^2 at the leaves; clones weakly
+                              # distinguishable by expression (kNN balanced accuracy 1.3-1.75x chance over 0.03-0.1)
+  sigma_space: 0.1            # positional programs (the middle level); calibrated: tumour cells' position from expression R^2 0.09 at 0.1
+                              # (PEtracer -0.2 to -0.4; 0.94 at 1.0, which made expression-only mapping near exact)
+  length_scale: 0.25          # of the positional programs, as a share of the section's diameter
+  nests: 9                    # tissue layout (scCube, layout.py): oval tumour nests in a fibroblast stroma
+  nest_purity: 0.9            # share of tumour cells in a nest (the rest: infiltrating T cells and endothelial cells)
+  aggregates: 3               # T-cell aggregates in the stroma
+  vessels: 0.15               # share of endothelial cells in the stroma
+  library: 1000               # mean counts per cell
+  # measurement
+  spots: visium               # Visium (Pedro, 2026-11-02): spot_diameter spots on a hexagonal lattice of spot_spacing, cells between spots not measured
+  spot_diameter: 55.0         # um
+  spot_spacing: 100.0         # um, centre to centre
+  cell_spacing: 5.0           # um between neighbouring cells: real tissue's density, ~12 cells per spot (layout.py; 10 before 2026-11-02)
+  cells_per_spot: 10          # spots: square only -- square bins of this many of the section half's cells, tiling the section
+  capture: 0.25               # share of the dissociated half that is sequenced (about 4,000 cells)
+  traced: 0.7                 # share of the sequenced tumour cells whose barcodes are read
+  tree: "true"                # tree given to SpOTr: "true", or "reconstructed" (Cassiopeia's VanillaGreedySolver on the barcodes)
+
+studies:                      # Fig. 2 (2026-11-02, night): PCC against each varied parameter, the others at the base world (Pedro: "When varying
+                              # one, keep the others fixed at the intermediate value"); the base world is SpOTr's target scenario (vault section 190)
+  heritable:                  # clone expression distinctness: weak to very weak, and strong (where the tree should stop mattering)
+    vary: {sigma_tree: [0.03, 0.06, 0.1, 0.3]}
+    baselines: [destvi, tangram, scdot, exact_ot, fgw]
+  migration:                  # lineage and space disagree: 0, 1 or 2 of the 5 clones dispersed over the section
+    vary: {migrate: [0.0, 0.2, 0.4]}
+    baselines: [destvi, tangram, scdot, exact_ot, fgw]
+  clones:                     # the number of clones (Pedro, 2026-11-02: "one of the simulation parameters we should vary")
+    vary: {n_clones: [3, 5, 10]}
+    baselines: [destvi, tangram, scdot, exact_ot, fgw]
+  # positional expression, the spatial model and the tree's source dropped (2026-11-02); their runs stay in results_visium2/
+  # no barcode-saturation study (Pedro, 2026-10-31): SpOTr is not specific to lineage-tracing technologies, so their particulars are not tested
+
+spotr_alpha: 0.2              # SpOTr at one fixed alpha for both arms (Pedro, 2026-11-02: results on a fixed alpha to share the paper soon)
+spotr_alphas: [0.0, 0.1, 0.2, 0.4, 0.95]   # rule spotr_grid (the overnight run): each arm at the elbow of this grid
+arms: [notree, clones, clone_tree, lineage]   # SpOTr: no tree, clone labels, clone tree, lineage tree
+ablation_arms: [clones_true_spreads]          # clone labels with the true spreads instead of learned ones
+example: {study: heritable, value: 0.06, seed: 1}   # the world of the standard example figure (the base world)
+
+c2l_epochs: 30000             # cell2location's spatial model (the package's documented default)
+tangram_epochs: 1000

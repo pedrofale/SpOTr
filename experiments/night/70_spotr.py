@@ -104,6 +104,13 @@ def deconv_np(T, X, idx):
     return float((R ** 2).mean() / (2 * X["sigma2"]))
 
 
+def growth_np(T, X, idx):
+    """anchor-free, biology-guided outer loss: Pearson r between each dissociated cell's tree fitness and the distance
+    to the tumour edge of where it is mapped, signed so that lower is better (growth_sign -1: fitter at the edge)"""
+    e = (T @ X["edge_spot"]) / np.maximum(T.sum(1), 1e-300)
+    return float(-X.get("growth_sign", -1.0) * np.corrcoef(X["fitness"][idx], e[idx])[0, 1])
+
+
 def err(T, X):
     return float(np.median(np.linalg.norm(X["spots"][T.argmax(1)] - X["xy_true"], axis=1)))
 
@@ -159,6 +166,10 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
         Jf, Jv = X["deconv_fit"], X["deconv_val"]
         Wsig_t, Ysp_t = t(X["W_sig"]), t(X["Y_spot"])
         fit_loss = lambda T, J: deconv_np(T, X, J)
+    elif outer == "growth":                                     # no anchor: half the CELLS fit, half pick the step
+        Jf, Jv = X["growth_fit"], X["growth_val"]
+        fit_t, edge_t = t(X["fitness"]), t(X["edge_spot"]); gsign = float(X.get("growth_sign", -1.0))
+        fit_loss = lambda T, J: growth_np(T, X, J)
     else:
         Jf = X["J"][: len(X["J"]) // 2]; Jv = X["J"][len(X["J"]) // 2:]
         fit_loss = lambda T, J: anchor_nll(T, X, J)
@@ -197,9 +208,16 @@ def learn(X, groups, learn_a=True, a0=0.165, steps=30, lr=0.08, prior_sd=0.5, ep
         comp = T.T @ Y; comp = comp / comp.sum(1, keepdim=True).clamp_min(1e-300)
         return ((comp[J] @ Wsig_t - Ysp_t[J]) ** 2).mean() / (2 * X["sigma2"])
 
+    def growth(T, J):
+        e = (T @ edge_t) / T.sum(1).clamp_min(1e-300)
+        f, e = fit_t[J] - fit_t[J].mean(), e[J] - e[J].mean()
+        return -gsign * (f * e).sum() / torch.sqrt((f * f).sum() * (e * e).sum())
+
     def nll(T, J):
         if outer == "deconv":
             return deconv(T, J)
+        if outer == "growth":
+            return growth(T, J)
         pred = (T.T @ Y)[J]; nj = Nsp[J].sum(1, keepdim=True)
         pi = (pred * (nj / pred.sum(1, keepdim=True).clamp_min(1e-300)) + prior) / (nj + 1.0)
         return -(Nsp[J] * torch.log(pi.clamp_min(1e-300))).sum() / Nsp[J].sum()

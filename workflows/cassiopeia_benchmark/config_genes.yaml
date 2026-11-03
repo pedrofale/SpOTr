@@ -1,0 +1,15 @@
+# Does the number of genes set the balance between expression and the tree?  (Pedro, 2026-10-31: "So if we change the number of genes in
+# the simulation we'd get different results?")  One world with subclone-specific expression (sigma_tree 1), 300 / 1,000 / 3,000 genes at the
+# same 1,000 counts per cell, two seeds; SpOTr's arms and exact OT.  Layer on config.yaml:
+#   snakemake ... --configfile config.yaml config_genes.yaml
+# FIXED BEFORE RUNNING (2026-10-31):
+#   E233  as the genes go 300 -> 1,000 -> 3,000: (a) the median per-cell ratio of the expression likelihood's cost spread to the tree's
+#         (372_'s measure, at the clone-label fit) rises; (b) the lineage tree's gain over no tree (per-spot subclone error) falls.
+out: results_genes
+study_set: genes
+studies_genes:
+  genes:
+    fix: {sigma_tree: 1.0}
+    vary: {genes: [300, 1000, 3000]}
+    baselines: [exact_ot]
+example: {study: genes, value: 1000, seed: 1}
