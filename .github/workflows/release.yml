@@ -6,7 +6,8 @@ name: release
 #
 # The tag must be the version in pyproject.toml and must be on main.
 # Publishing uses PyPI's trusted publishing (OIDC), so there is no API token in the repository.
-# The publisher on PyPI: project clonespotr, owner pedrofale, repository spotr, workflow release.yml, environment blank.
+# The publisher on PyPI: project phylospatial-spotr, owner pedrofale, repository SpOTr (as GitHub spells it; the token carries
+# that spelling), workflow release.yml, environment blank.
 on:
   push:
     tags:
