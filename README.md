@@ -3,16 +3,19 @@
 </div>
 <p></p>
 
+[![pypi](https://img.shields.io/pypi/v/phylospatial-spotr.svg?style=flat)](https://pypi.org/project/phylospatial-spotr/)
+[![CI](https://github.com/pedrofale/spotr/actions/workflows/tests.yml/badge.svg)](https://github.com/pedrofale/spotr/actions/workflows/tests.yml)
+
 Phylospatial optimal transport for single-cell and spatial transcriptomics data integration. SpOTr maps dissociated cancer cells to the spots of spatial transcriptomics data, using the concordance between the evolutionary tree of the cells and their spatial distribution. It combines the spot deconvolution model of cell2location with Fused Gromov–Wasserstein optimal transport: the tree draws related cells to nearby spots, and the deconvolution determines how many cancer cells each spot holds. SpOTr recovers the spatial locations of clones that are hard to distinguish by their expression, places sub-lineages that no reference signature describes, and draws the phylogeny of a tumor in the tissue. When no tree is available, it can use clone labels alone.
 
 ## Installation
 
 ```bash
-pip install clonespotr
+pip install phylospatial-spotr
 ```
 
-The package is named `clonespotr` on PyPI, where `spotr` is an unrelated project, and is imported as `spotr`.
-Optional extras: `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures), as in `pip install "clonespotr[plot]"`.
+The package is named `phylospatial-spotr` on PyPI, where `spotr` is an unrelated project, and is imported as `spotr`.
+Optional extras: `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures), as in `pip install "phylospatial-spotr[plot]"`.
 The development version installs with `pip install git+https://github.com/pedrofale/spotr.git`.
 
 ## Quick start
