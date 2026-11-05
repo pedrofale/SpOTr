@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "clonespotr"
 version = "0.1.0"
-description = "Tree and space-aware optimal transport for mapping dissociated cancer cells to spatial transcriptomics spots."
+description = "Phylospatial optimal transport for mapping dissociated cancer cells to spatial transcriptomics spots."
 authors = ["pedrofale <pedro.miguel.ferreira.pf@gmail.com>"]
 license = "MIT"
 readme = "README.md"

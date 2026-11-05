@@ -3,7 +3,7 @@
 </div>
 <p></p>
 
-Tree and space-aware optimal transport for single-cell and spatial transcriptomics data. SpOTr maps dissociated cancer cells to the spots of spatial transcriptomics data, using the concordance between the evolutionary tree of the cells and their spatial distribution. It combines the spot deconvolution model of cell2location with Fused Gromov–Wasserstein optimal transport: the tree draws related cells to nearby spots, and the deconvolution determines how many cancer cells each spot holds. SpOTr recovers the spatial locations of clones that are hard to distinguish by their expression, places sub-lineages that no reference signature describes, and draws the phylogeny of a tumor in the tissue. When no tree is available, it can use clone labels alone.
+Phylospatial optimal transport for single-cell and spatial transcriptomics data integration. SpOTr maps dissociated cancer cells to the spots of spatial transcriptomics data, using the concordance between the evolutionary tree of the cells and their spatial distribution. It combines the spot deconvolution model of cell2location with Fused Gromov–Wasserstein optimal transport: the tree draws related cells to nearby spots, and the deconvolution determines how many cancer cells each spot holds. SpOTr recovers the spatial locations of clones that are hard to distinguish by their expression, places sub-lineages that no reference signature describes, and draws the phylogeny of a tumor in the tissue. When no tree is available, it can use clone labels alone.
 
 ## Installation
 
@@ -49,4 +49,4 @@ The simulation benchmark, the analyses of the PEtracer and HTAN data, and every 
 
 ## Citation
 
-Pedro F. Ferreira, Oskar Kviman, Jens Lagergren. Tree and space-aware optimal transport for single-cell and spatial transcriptomics data integration (2026).
+Pedro F. Ferreira, Oskar Kviman, Jens Lagergren. Phylospatial optimal transport for single-cell and spatial transcriptomics data integration (2026).
