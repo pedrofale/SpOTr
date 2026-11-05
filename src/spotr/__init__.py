@@ -1,4 +1,4 @@
-"""SpOTr: tree and space-aware optimal transport for mapping dissociated cancer cells to spatial transcriptomics spots.
+"""SpOTr: phylospatial optimal transport for mapping dissociated cancer cells to spatial transcriptomics spots.
 
     import spotr
     spotr.SpOTr.setup_anndata(sc_adata, labels_key="cell_type", clone_key="clone", tree=newick)
