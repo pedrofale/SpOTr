@@ -1,5 +1,5 @@
 <div align="left">
-  <img src="assets/spotr.png" width="200px">
+  <img src="https://raw.githubusercontent.com/pedrofale/spotr/main/assets/spotr.png" width="200px">
 </div>
 <p></p>
 
@@ -8,10 +8,12 @@ Tree and space-aware optimal transport for single-cell and spatial transcriptomi
 ## Installation
 
 ```bash
-pip install git+https://github.com/pedrofale/spotr.git
+pip install clonespotr
 ```
 
-Optional extras: `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures).
+The package is named `clonespotr` on PyPI, where `spotr` is an unrelated project, and is imported as `spotr`.
+Optional extras: `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures), as in `pip install "clonespotr[plot]"`.
+The development version installs with `pip install git+https://github.com/pedrofale/spotr.git`.
 
 ## Quick start
 
@@ -39,11 +41,11 @@ Without a tree, SpOTr draws the cells of each clone together. `model.train(clade
 
 ## Example
 
-[`notebooks/spotr_toy_example.ipynb`](notebooks/spotr_toy_example.ipynb) runs SpOTr on a toy tumor (`spotr.datasets.toy_tumor()`) whose clones are hard to distinguish by their expression but each hold their own territory, and compares it with SpOTr without the tree.
+[`notebooks/spotr_toy_example.ipynb`](https://github.com/pedrofale/spotr/blob/main/notebooks/spotr_toy_example.ipynb) runs SpOTr on a toy tumor (`spotr.datasets.toy_tumor()`) whose clones are hard to distinguish by their expression but each hold their own territory, and compares it with SpOTr without the tree.
 
 ## Reproducibility
 
-The simulation benchmark, the analyses of the PEtracer and HTAN data, and every figure of the paper are in [`reproducibility/`](reproducibility/).
+The simulation benchmark, the analyses of the PEtracer and HTAN data, and every figure of the paper are in [`reproducibility/`](https://github.com/pedrofale/spotr/tree/main/reproducibility).
 
 ## Citation
 
