@@ -55,10 +55,13 @@ def main():
         ax.set_xticks([0, 1], ["default weights", "weight 0"]); ax.set_xlim(-0.35, 1.35); ax.set_title(title, fontsize=11)
         ax.grid(color=GRID, axis="y"); ax.set_axisbelow(True); [ax.spines[k].set_visible(False) for k in ("top", "right")]
     axs[0].set_ylabel("Clone PCC")
-    axs[1].legend(handles=[Line2D([], [], ls="", marker="o", color=ORANGE, label="weak clone expression"), Line2D([], [], ls="", marker="o", color=BROWN, label="distinct clone expression"),
-                           Line2D([], [], ls="", marker="o", color="#777777", label="1 clone dispersed"), Line2D([], [], ls="", marker="s", color="#777777", label="2 clones dispersed"),
+    fmt = lambda v: f"{v:g}"
+    leg = axs[1].legend(handles=[Line2D([], [], ls="", marker="o", color=ORANGE, label=fmt(sig[0])), Line2D([], [], ls="", marker="o", color=BROWN, label=fmt(sig[1]))],
+                        title="Heritable program\nstrength", frameon=False, fontsize=8, title_fontsize=8, loc="upper left", bbox_to_anchor=(1.0, 1.0))
+    leg._legend_box.align = "left"; axs[1].add_artist(leg)
+    axs[1].legend(handles=[Line2D([], [], ls="", marker="o", color="#777777", label="1 clone dispersed"), Line2D([], [], ls="", marker="s", color="#777777", label="2 clones dispersed"),
                            Line2D([], [], ls="", marker="o", markerfacecolor="white", markeredgecolor="#777777", label="partly clustered")],
-                  frameon=False, fontsize=8, loc="upper left", bbox_to_anchor=(1.0, 1.0))
+                  frameon=False, fontsize=8, loc="upper left", bbox_to_anchor=(1.0, 0.66))
     figlayout.finish(fig, [(axs[0], "A"), (axs[1], "B")])
     f = paths.figure("fig_options.pdf"); fig.savefig(f, bbox_inches="tight"); figlayout.compress_pdf(f); fig.savefig(f.with_suffix(".png"), dpi=110, bbox_inches="tight"); plt.close(fig)
     d = np.array([(cl, x, y) for _, _, cl, x, y in rows[True]], float); r = d[d[:, 0] == 0]; o = np.array([(x, y) for *_, x, y in rows[False]])
