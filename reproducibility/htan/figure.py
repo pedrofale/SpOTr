@@ -167,9 +167,7 @@ def main():
     for i, (key, nm, cc) in enumerate(arms_):
         for j, (m_, _) in enumerate(mets):
             x = j + (i - (len(arms_) - 1) / 2) * w; v_ = Q[key].get(m_)
-            if v_ is None:
-                ax.text(x, 0.52, "n/a", rotation=90, ha="center", va="bottom", fontsize=8, color="#9a9a9a")
-            else:
+            if v_ is not None:
                 ax.bar(x, v_, width=w * 0.9, color=cc)
     ax.set_xticks(range(len(mets)), [t for _, t in mets]); ax.set_ylim(0.5, 1.0); ax.set_ylabel("balanced accuracy"); ax.grid(color=GRID, axis="y")
     ax.set_axisbelow(True); [ax.spines[s_].set_visible(False) for s_ in ("top", "right")]
