@@ -1,10 +1,10 @@
 """Fig. S5 (fig_options): weight 0 on the dispersed clones (environment benchmark_env; CPU).
 
 In each simulated tumor with one or two of its five clones dispersed over the section, with weak (the benchmark's) and with distinct clone
-expression, SpOTr is fitted with the default clade weights and with weight 0 on the dispersed clones.  For each dispersed clone, the change in its
-Pearson correlation with the truth against how clustered it is in the tissue: the share of each of its cells' ten nearest tumor neighbours that
-belong to the clone, above the clone's share of the tumor and scaled to 1 for a fully clustered clone (0: dispersed at random).  The other
-clones keep their weights; their change is printed.
+expression, SpOTr is fitted with the default clade weights and with weight 0 on the dispersed clones.  (A) For each dispersed clone, its Pearson
+correlation with the truth under both fits, side by side, a line joining the two; open markers for a clone that the dispersal left partly
+clustered in the tissue (clustering above 0.1: the share of the ten nearest tumor neighbours of its cells that belong to the clone, above its
+share of the tumor and scaled to 1 for a fully clustered clone).  (B) The same for the other clones of these tumors, which keep their weights.
 
 Usage: python fig_weights.py   (reads config.yaml and the results of rule spotr_weights; writes to common.paths.FIGURES)
 """
@@ -41,28 +41,29 @@ def changes(d):
 
 
 def main():
-    cfg = yaml.safe_load(open(HERE.parent / "config.yaml")); root = HERE.parent / cfg["out"]; sig = sorted(cfg["weights"]["sigma_tree"])
-    fig, ax = plt.subplots(figsize=(5.6, 4.0)); dd, other = [], []
+    cfg = yaml.safe_load(open(HERE.parent / "config.yaml")); root = HERE.parent / cfg["out"]
+    sig, mig = sorted(cfg["weights"]["sigma_tree"]), min(cfg["weights"]["migrate"]); rows = {True: [], False: []}
     for st, m, w, _ in world.weight_worlds(cfg):
         for s in cfg["seeds"]:
             for disp, c, x, y in changes(root / "worlds" / w / f"seed{s}"):
-                if disp:
-                    dd.append((c, y - x)); col = ORANGE if st == sig[0] else BROWN; mk = "o" if m == min(cfg["weights"]["migrate"]) else "s"
-                    ax.scatter([c], [y - x], s=40, color=col, marker=mk, zorder=3, edgecolor="white", lw=0.5)
-                else:
-                    other.append(y - x)
-    dd = np.array(dd); ax.axhline(0, color="#9a9a9a", lw=1, ls=(0, (4, 3)))
-    ax.set_xlabel("clustering of the dispersed clone in the tissue"); ax.set_ylabel("change in per-clone PCC"); ax.set_title("Zero weight on dispersed clones", fontsize=11)
-    ax.legend(handles=[Line2D([], [], ls="", marker="o", color=ORANGE, label="weak clone expression"), Line2D([], [], ls="", marker="o", color=BROWN, label="distinct clone expression"),
-                       Line2D([], [], ls="", marker="o", color="#777777", label="1 clone dispersed"), Line2D([], [], ls="", marker="s", color="#777777", label="2 clones dispersed")],
-              frameon=False, fontsize=8, loc="lower left")
-    ax.grid(color=GRID); ax.set_axisbelow(True); [ax.spines[k].set_visible(False) for k in ("top", "right")]
-    f = paths.figure("fig_options.pdf"); fig.savefig(f, bbox_inches="tight"); figlayout.compress_pdf(f); fig.savefig(f.with_suffix(".png"), dpi=80, bbox_inches="tight"); plt.close(fig)
-    other = np.array(other)
-    print(f"dispersed clones: improved {int((dd[:, 1] > 0).sum())} of {len(dd)}, median change {np.median(dd[:, 1]):+.3f}")
-    for c, v in sorted(dd.tolist()):
-        print(f"   clustering {c:.2f}: {v:+.3f}")
-    print(f"other clones: median change {np.median(other):+.3f}, largest |change| {np.abs(other).max():.3f}")
+                rows[disp].append((ORANGE if st == sig[0] else BROWN, "o" if m == mig else "s", disp and c > 0.1, x, y))
+    fig, axs = plt.subplots(1, 2, figsize=(7.6, 3.8), sharey=True)
+    for ax, disp, title in ((axs[0], True, "Dispersed clones"), (axs[1], False, "Other clones")):
+        for col, mk, clustered, x, y in rows[disp]:
+            ax.plot([0, 1], [x, y], color=col, lw=1.2, alpha=0.8 if disp else 0.45, ls=(0, (3, 2)) if clustered else "-", zorder=2)
+            ax.scatter([0, 1], [x, y], s=36, marker=mk, zorder=3, facecolor="white" if clustered else col, edgecolor=col, lw=1.2)
+        ax.set_xticks([0, 1], ["default weights", "weight 0"]); ax.set_xlim(-0.35, 1.35); ax.set_title(title, fontsize=11)
+        ax.grid(color=GRID, axis="y"); ax.set_axisbelow(True); [ax.spines[k].set_visible(False) for k in ("top", "right")]
+    axs[0].set_ylabel("per-clone PCC")
+    axs[1].legend(handles=[Line2D([], [], ls="", marker="o", color=ORANGE, label="weak clone expression"), Line2D([], [], ls="", marker="o", color=BROWN, label="distinct clone expression"),
+                           Line2D([], [], ls="", marker="o", color="#777777", label="1 clone dispersed"), Line2D([], [], ls="", marker="s", color="#777777", label="2 clones dispersed"),
+                           Line2D([], [], ls="", marker="o", markerfacecolor="white", markeredgecolor="#777777", label="partly clustered")],
+                  frameon=False, fontsize=8, loc="upper left", bbox_to_anchor=(1.0, 1.0))
+    figlayout.finish(fig, [(axs[0], "A"), (axs[1], "B")])
+    f = paths.figure("fig_options.pdf"); fig.savefig(f, bbox_inches="tight"); figlayout.compress_pdf(f); fig.savefig(f.with_suffix(".png"), dpi=110, bbox_inches="tight"); plt.close(fig)
+    d = np.array([(cl, x, y) for _, _, cl, x, y in rows[True]], float); r = d[d[:, 0] == 0]; o = np.array([(x, y) for *_, x, y in rows[False]])
+    print(f"dispersed at random: improved {int((r[:, 2] > r[:, 1]).sum())} of {len(r)}, largest gain {np.max(r[:, 2] - r[:, 1]):+.3f}; partly clustered: {d[d[:, 0] == 1][:, 1:].round(3).tolist()}")
+    print(f"other clones: {len(o)}, largest |change| {np.abs(o[:, 1] - o[:, 0]).max():.3f}")
 
 
 if __name__ == "__main__":
