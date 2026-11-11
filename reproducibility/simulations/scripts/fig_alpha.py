@@ -2,7 +2,7 @@
 
 (A) SpOTr's expression cost and structural cost over alpha, each normalised between the smallest and the largest alpha, and their sum, whose
     minimum is the elbow, on the seed of Fig. 2.  (B) The per-spot clone error of each map (the mean over spots with tumor cells of the total
-    variation distance between the true and the mapped clone composition), with the elbow and the default alpha marked.
+    variation distance between the true and the mapped clone composition), with the default alpha marked.
 
 Usage: python fig_alpha.py   (reads config.yaml and the results of rule spotr_grid; writes to common.paths.FIGURES)
 """
@@ -36,10 +36,10 @@ def main():
         e = (E - E[0]) / max(E[-1] - E[0], 1e-30); c = (S - S[-1]) / max(S[0] - S[-1], 1e-30); el = al[int(np.argmin(e + c))]; first = True
         axs[0].plot(al, e, color="#4c78a8", ls=ls, lw=2, label="expression cost" if first else None)
         axs[0].plot(al, c, color="#b279a2", ls=ls, lw=2, label="structural cost" if first else None)
-        axs[0].plot(al, e + c, color=INK, ls=ls, lw=2.5, label="sum" if first else None); axs[0].scatter([el], [(e + c)[al.index(el)]], s=90, color=ORANGE, edgecolor=INK, zorder=5)
+        axs[0].plot(al, e + c, color=INK, ls=ls, lw=2.5, label="sum" if first else None)
         err = [clone_error(z[f"phi_{a}"].astype(float).T @ oh, q["Ncl"].astype(float)) for a in al]
         axs[1].plot(al, err, color=ORANGE, ls=ls, lw=2.5, marker="o")
-        axs[1].scatter([el], [err[al.index(el)]], s=130, marker="D", color=ORANGE, edgecolor=INK, zorder=5); print(f"seed {s}: elbow {el}")
+        print(f"seed {s}: elbow {el}")
     axs[0].set_title("Elbow", fontsize=11); axs[0].set_xlabel("alpha"); axs[0].set_ylabel("normalized cost"); axs[0].legend(frameon=False, fontsize=9)
     ax = axs[1]; ax.axvline(cfg["spotr"]["alpha"], color="#9a9a9a", lw=1, ls=(0, (4, 3)))
     ax.text(cfg["spotr"]["alpha"] + 0.005, ax.get_ylim()[1], "default", va="top", fontsize=9, color="#7a7a7a")
