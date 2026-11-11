@@ -54,7 +54,7 @@ def main():
             ax.scatter([0, 1], [x, y], s=36, marker=mk, zorder=3, facecolor="white" if clustered else col, edgecolor=col, lw=1.2)
         ax.set_xticks([0, 1], ["default weights", "weight 0"]); ax.set_xlim(-0.35, 1.35); ax.set_title(title, fontsize=11)
         ax.grid(color=GRID, axis="y"); ax.set_axisbelow(True); [ax.spines[k].set_visible(False) for k in ("top", "right")]
-    axs[0].set_ylabel("per-clone PCC")
+    axs[0].set_ylabel("Clone PCC")
     axs[1].legend(handles=[Line2D([], [], ls="", marker="o", color=ORANGE, label="weak clone expression"), Line2D([], [], ls="", marker="o", color=BROWN, label="distinct clone expression"),
                            Line2D([], [], ls="", marker="o", color="#777777", label="1 clone dispersed"), Line2D([], [], ls="", marker="s", color="#777777", label="2 clones dispersed"),
                            Line2D([], [], ls="", marker="o", markerfacecolor="white", markeredgecolor="#777777", label="partly clustered")],
