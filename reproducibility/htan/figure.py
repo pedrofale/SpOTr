@@ -8,7 +8,7 @@
     B1b among B1's mapped nuclei, against B1b's share of those nuclei (spots with at least a quarter of a mapped B1 nucleus).
 (F) The tree in space: each clade (A, B1, B2, B1a, B1b) and each ancestor (B, the common ancestor) at the centroid of its nuclei's expected
     positions under SpOTr's map, arrows from parent to child, over SpOTr's clone map (B) faded; marker area grows with the number of nuclei.
-Fig. S3: balanced purity against the copy-number references -- within B1 (B1b vs B1a), between B1 and B2, between B and A -- for SpOTr,
+Fig. S3: balanced accuracy against the copy-number references -- within B1 (B1b vs B1a), between B1 and B2, between B and A -- for SpOTr,
     SpOTr with the expression alone (alpha 0) and cell2location where its labels allow.  Purity: the spots beyond 0.5 sd of a reference on
     either side; the mean of the two sides' shares of the expected group.
 
@@ -52,7 +52,7 @@ def contrasts(st_):
 
 
 def purity(G, con):
-    """balanced purity per contrast, from each group's mass per spot"""
+    """balanced accuracy per contrast, from each group's mass per spot"""
     out = {}
     for nm, (g1, g0, ref) in con.items():
         if not all(g in G for g in g1 + g0):
@@ -156,7 +156,7 @@ def main():
         cb_ = fig.colorbar(m_, cax=fig.add_axes([p_.x1 + 0.005, p_.y0, 0.008, p_.height])); cb_.ax.tick_params(labelsize=9); cb_.set_label(lab_, fontsize=10, labelpad=2)
     f = paths.figure("fig_htan_beyond.pdf"); fig.savefig(f, bbox_inches="tight", dpi=200); figlayout.compress_pdf(f)
     fig.savefig(paths.figure("fig_htan_beyond.png"), dpi=60, bbox_inches="tight"); plt.close(fig)
-    # Fig. S3: purity against the copy-number references
+    # Fig. S3: balanced accuracy against the copy-number references
     con = contrasts(st_); Q = {f"alpha {a}": map_purity(R[a]["phi"].astype(float), groups(sc_, R[a]["cells"].astype(str)), con) for a in (0.2, 0.0)}
     w_ = np.asarray(o["w"], float); Q["c2l"] = purity({k: w_[:, ty.index(k)] for k in ("A", "B1", "B2")},
                                                     {"B1 vs B2": (["B1"], ["B2"], con["B1 vs B2"][2]), "B vs A": (["B1", "B2"], ["A"], con["B vs A"][2])})
@@ -167,11 +167,9 @@ def main():
     for i, (key, nm, cc) in enumerate(arms_):
         for j, (m_, _) in enumerate(mets):
             x = j + (i - (len(arms_) - 1) / 2) * w; v_ = Q[key].get(m_)
-            if v_ is None:
-                ax.text(x, 0.52, "n/a", rotation=90, ha="center", va="bottom", fontsize=8, color="#9a9a9a")
-            else:
+            if v_ is not None:
                 ax.bar(x, v_, width=w * 0.9, color=cc)
-    ax.set_xticks(range(len(mets)), [t for _, t in mets]); ax.set_ylim(0.5, 1.0); ax.set_ylabel("purity against the copy-number signal"); ax.grid(color=GRID, axis="y")
+    ax.set_xticks(range(len(mets)), [t for _, t in mets]); ax.set_ylim(0.5, 1.0); ax.set_ylabel("balanced accuracy"); ax.grid(color=GRID, axis="y")
     ax.set_axisbelow(True); [ax.spines[s_].set_visible(False) for s_ in ("top", "right")]
     ax.legend(handles=[Patch(color=cc, label=nm) for _, nm, cc in arms_], frameon=False, fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=len(arms_))
     fs.savefig(paths.figure("fig_htan_purity.pdf"), bbox_inches="tight"); fs.savefig(paths.figure("fig_htan_purity.png"), dpi=80, bbox_inches="tight"); plt.close(fs)
