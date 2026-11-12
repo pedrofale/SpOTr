@@ -1,27 +1,30 @@
-"""PEtracer (Koblan et al. 2025): synthetic Visium spots from one half of a tumor section, dissociated cells from the other half.
+"""PEtracer (Koblan et al. 2025), with synthetic Visium spots from one half of a tumor section and dissociated cells from the other half.
 
-The data are the mouse 4T1 lung metastases of the PEtracer study, measured by MERFISH (175 genes) with each tumor cell's lineage read in situ,
-as pycea.datasets.koblan25(experiment="tumor") provides them (downloaded from Zenodo record 15750529 on first use, cached in ~/.treedata):
-raw counts, positions, 18 cell subtypes (Malignant and 17 others), one time-calibrated tree over the traced malignant cells, with its leaves
-at time 35, and 18 clades.
+The data are the mouse 4T1 lung metastases of the PEtracer study, measured by MERFISH (175 genes) with the lineage of each tumor cell read in
+situ, as pycea.datasets.koblan25(experiment="tumor") provides them (downloaded from Zenodo record 15750529 on first use and cached in
+~/.treedata). They contain raw counts, positions, 18 cell subtypes (Malignant and 17 others), one time-calibrated tree over the traced malignant
+cells with its leaves at time 35, and 18 clades.
 
-For one section (default M3-4; doublets removed), the cells are split at random in two halves (numpy's default_rng(seed), seed 0):
-  spots       the first half measured as by Visium: spots of 55 um on a hexagonal lattice 100 um apart, each holding the cells whose centres lie
-              within it; the cells between spots are not measured, and spots without a cell are dropped.  Each spot's counts are the sum of
-              its cells' counts.
-  dissociated 8,000 cells drawn without replacement from the other half (every type, so the tracing and type proportions are kept).
-Each dissociated cell's label is its subtype; each traced malignant cell's clone is its clade ("clade 1" .. "clade 18"), and "pooled" for the
-traced cells outside the 18 clades.  The tree of the mapped cells is the subtree of the time-calibrated tree on their leaves.
+We split the cells of one section (default M3-4, without doublets) at random into two halves (default_rng of numpy with seed 0).
+  spots        We measure the first half as by Visium, with spots of 55 um on a hexagonal lattice 100 um apart, each containing the cells whose
+               centers are within it. The cells between spots are not measured, and the spots without a cell are dropped. The counts of each spot
+               are the sum of the counts of its cells.
+  dissociated  We sample 8,000 cells of every type without replacement from the other half, so that the proportions of traced cells and of cell
+               types are kept.
+The label of each dissociated cell is its subtype, and the clone of each traced malignant cell is its clade ("clade 1" .. "clade 18"), or
+"pooled" for the traced cells outside the 18 clades. The tree of the mapped cells is the subtree of the time-calibrated tree on their leaves.
 
 Writes $SPOTR_DATA/petracer/<section>/
-  sc.h5ad      the dissociated cells: raw counts; obs cell_type, clone (missing for the cells without a lineage readout and the non-tumor
-               cells), x and y (in situ positions); uns["tree"] the mapped cells' tree in Newick format (branch lengths in the tree's time).
-  st.h5ad      the spots: raw counts; obsm["spatial"] the spot centres (um); obs n_cells and n_tumor; the truth as obsm["clone_counts"]
-               (each spot's traced malignant cells per clone) and obsm["type_counts"] (its non-tumor cells per subtype).
-  insitu.npz   the cells of the measured half: xy and label (clone for traced malignant cells, "Malignant" for the other malignant cells, the
-               subtype otherwise).
+  sc.h5ad      The dissociated cells, with raw counts, the columns cell_type, clone (missing for the cells without a lineage readout and the
+               non-tumor cells), x and y (in situ positions) of obs, and the tree of the mapped cells in Newick format in uns["tree"] (branch
+               lengths in the time of the tree).
+  st.h5ad      The spots, with raw counts, the spot centers (um) in obsm["spatial"], n_cells and n_tumor in obs, and the truth in
+               obsm["clone_counts"] (the traced malignant cells of each clone in each spot) and obsm["type_counts"] (the non-tumor cells of each
+               subtype in each spot).
+  insitu.npz   The cells of the measured half, with xy and label (the clone for traced malignant cells, "Malignant" for the other malignant cells
+               and the subtype otherwise).
 
-Usage: python prepare.py [section]   (environment benchmark_env; pycea 0.2.0)
+Usage: python prepare.py [section]   (environment benchmark_env, pycea 0.2.0)
 """
 import sys
 from pathlib import Path
@@ -31,13 +34,14 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import paths  # noqa: E402
 
-SPOT_D, SPOT_A = 55.0, 100.0                        # Visium: spot diameter and centre-to-centre spacing (um)
+SPOT_D, SPOT_A = 55.0, 100.0                        # spot diameter and center-to-center spacing of Visium (um)
 N_DISS, SEED = 8000, 0
 CANCER = "Malignant"
 
 
 def visium_spots(xy):
-    """spot centres on a hexagonal lattice over the cells' bounding box; for each cell, its spot or -1 when it lies between spots"""
+    """Return the spot centers on a hexagonal lattice over the bounding box of the cells, and the spot of each cell, or -1 for a cell between spots.
+    """
     from scipy.spatial import cKDTree
     lo, hi = xy.min(0), xy.max(0); a = SPOT_A; rows = np.arange(lo[1] + a / 4, hi[1], a * np.sqrt(3) / 2)
     grid = np.array([(x, y) for i, y in enumerate(rows) for x in np.arange(lo[0] + a / 4 + (a / 2) * (i % 2), hi[0], a)])
@@ -47,7 +51,7 @@ def visium_spots(xy):
 
 
 def newick(parent, length, names):
-    """Newick string with branch lengths at full precision"""
+    """Return a Newick string with branch lengths at full precision."""
     kids = [[] for _ in parent]
     for v, p in enumerate(parent):
         if p >= 0:
@@ -70,7 +74,7 @@ def main(section="M3-4"):
     sub = sub_all[idx]; mal = sub == CANCER; traced = o["type"].astype(str).to_numpy()[idx] == "tracing"
     clade = o["clade"].astype(str).to_numpy()[idx]
     clone = np.array([("pooled" if c == "nan" else f"clade {c}") if (m and tr) else "" for c, m, tr in zip(clade, mal, traced)], dtype=object)
-    label = np.where(clone != "", clone, sub)                                                  # in situ label: clone, else subtype
+    label = np.where(clone != "", clone, sub)                                                  # in situ label, the clone or otherwise the subtype
     # the two halves
     rng = np.random.default_rng(SEED); perm = rng.permutation(len(idx)); side, pool = perm[: len(idx) // 2], perm[len(idx) // 2:]
     diss = np.sort(rng.choice(pool, min(N_DISS, len(pool)), replace=False))

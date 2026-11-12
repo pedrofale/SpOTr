@@ -1,13 +1,13 @@
-"""A simulated tumor's files and what the steps share.
+"""The files of a simulated tumor, and the functions that the steps share.
 
-A world is the base world of config.yaml with some parameters changed.  Its id is the first ten hex digits of the SHA-1 of its parameters
-(JSON, sorted keys), and each seed has a folder <out>/worlds/<id>/seed<s>/ with
+A scenario, called a world in the code, is the base world of config.yaml with some parameters changed. Its id is the first ten hex digits of the
+SHA-1 of its parameters (JSON with sorted keys), and each seed has a folder <out>/worlds/<id>/seed<s>/ with
 
     layout.npz   the tissue layout (layout.py)
-    sim.npz      the lineage, the tumor cells' positions and clones (simulate.py)
+    sim.npz      the lineage, the positions and the clones of the tumor cells (simulate.py)
     problem.npz  the spots and the dissociated sample (express.py)
-    trees.npz    the true tree's distances between the traced dissociated cells, and their clones (tree.py)
-    spotr*.npz   SpOTr's maps (fit_spotr.py); <method>.npz each other method's output (fit_baselines.py)
+    trees.npz    the distances of the true tree between the traced dissociated cells, and their clones (tree.py)
+    spotr*.npz   the maps of SpOTr (fit_spotr.py), and <method>.npz the output of each other method (fit_baselines.py)
 """
 import hashlib
 import json
@@ -27,7 +27,7 @@ def params(config, **changes):
 
 
 def studies(config):
-    """[(study, parameter, value, world id, parameters)] of Fig. 2's three studies"""
+    """Return [(study, parameter, value, world id, parameters)] for the three studies of Fig. 2."""
     rows = []
     for study, spec in config["studies"].items():
         (knob, values), = spec["vary"].items()
@@ -36,28 +36,32 @@ def studies(config):
 
 
 def weight_worlds(config):
-    """[(sigma_tree, migrate, world id, parameters)] of Fig. S5"""
+    """Return [(sigma_tree, migrate, world id, parameters)] for Fig. S5."""
     w = config["weights"]
     return [(s, m, world_id(params(config, sigma_tree=s, migrate=m)), params(config, sigma_tree=s, migrate=m)) for s in w["sigma_tree"] for m in w["migrate"]]
 
 
 def example(config, root):
-    """the example world's seed folder: the base world"""
+    """Return the seed folder of the example scenario, which is the base world."""
     return Path(root) / config["out"] / "worlds" / world_id(params(config)) / f"seed{config['example']['seed']}"
 
 
 def labels(q, t):
-    """each dissociated cell's label: its non-tumor type me<e>, its clone c<k> (or "pooled", the smaller clades) when its lineage is read, and
-    "untraced" for the other tumor cells"""
+    """Return the label of each dissociated cell, which is its non-tumor type me<e>, its clone c<k> (or "pooled" for the smaller clades) when its
+    lineage is read, or "untraced" for the other tumor cells.
+    """
     kind, me, tr = q["kind"], q["me_type"], q["traced"].astype(bool)
     lab = np.array([f"me{e}" for e in me], dtype=object); lab[(kind == 0) & ~tr] = "untraced"
     lab[tr] = [f"c{c}" if c >= 0 else "pooled" for c in t["clone_true_tree"]]; return lab.astype(str)
 
 
 def masses(d):
-    """each method's mass of every true clone per spot (spots x clones) in one seed folder: a map of cells through each traced cell's true clone
-    (each cell's row normalised); cell2location's abundances and DestVI's proportions of each label through the true clones of that label's cells.
-    Returns ({method: masses}, problem)."""
+    """Return the mass of every true clone in each spot (spots x clones) for each method in one seed folder, and the problem.
+
+    The masses of a map of cells are summed through the true clone of each traced cell, after normalizing the row of each cell. The abundances of
+    cell2location and the proportions of DestVI are distributed over the true clones of the cells of each label. Returns ({method: masses},
+    problem).
+    """
     d = Path(d); q = np.load(d / "problem.npz", allow_pickle=True); t = np.load(d / "trees.npz"); K = int(q["K"]); tr = q["traced"].astype(bool)
     oh = np.eye(K)[q["clone"][tr]]; rn = lambda P: P / np.maximum(P.sum(1, keepdims=True), 1e-300); out = {}
     if (d / "spotr.npz").exists():

@@ -1,12 +1,13 @@
-"""The tissue layout (environment benchmark_env): scCube's reference-free custom cluster pattern (Qian et al. 2024, Nat Commun 15:5021;
-github.com/ZJUFanLab/scCube, commit d5b423d), as its "cold tumour-immune microenvironment" tutorial builds it: tumor nests in a stroma.
+"""The tissue layout (environment benchmark_env), built with the reference-free custom cluster pattern of scCube (Qian et al. 2024, Nat Commun
+15:5021, github.com/ZJUFanLab/scCube, commit d5b423d) as in its "cold tumour-immune microenvironment" tutorial, with tumor nests in a stroma.
 
-`nests` oval tumor nests with scCube's default boundary noise (centres uniform over the inner 70% of the section, semi-axes 13-19% and 9-14% of
-its side, random orientation), each `nest_purity` tumor with the rest of the second and third non-tumor types (0.8 / 0.2) infiltrating;
-`aggregates` aggregates of the second type in the stroma (small ovals, 70% that type, the rest the first); the stroma of the first type with a
-share `vessels` of the third.  scCube places the cells as a Poisson process; the number of cells is set so that the layout holds about
-n_cells tumor cells, and the layout is scaled so that neighbouring cells are cell_spacing um apart on average.  Cell types: 0 tumor, 1-3 the
-non-tumor types (scCube's fibroblasts, T cells and endothelial cells).
+The layout has `nests` oval tumor nests with the default boundary noise of scCube, with centers uniform over the inner 70% of the section,
+semi-axes of 13-19% and 9-14% of its side and random orientations. Each nest contains a fraction `nest_purity` of tumor cells, and the rest are
+cells of the second and third non-tumor types (0.8 / 0.2) that infiltrate the nest. The stroma consists of cells of the first type with a
+fraction `vessels` of the third, and contains `aggregates` aggregates of the second type (small ovals with 70% of that type and the rest of the
+first). scCube places the cells as a Poisson process. We set the number of cells so that the layout contains about n_cells tumor cells, and scale
+the layout so that neighboring cells are on average cell_spacing um apart. The cell types are 0 for tumor and 1-3 for the non-tumor types, which
+are the fibroblasts, T cells and endothelial cells of scCube.
 
 Usage: python layout.py <params.json> <seed> <out.npz>
 """

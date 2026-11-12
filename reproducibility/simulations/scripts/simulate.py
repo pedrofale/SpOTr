@@ -1,12 +1,16 @@
-"""The lineage, the barcodes, the tumor cells' positions and their clones (environment cassiopeia).
+"""The lineage, the barcodes, the positions of the tumor cells and their clones (environment cassiopeia).
 
-Lineage: Cassiopeia's BirthDeathFitnessSimulator, grown to as many leaves as the tissue layout (layout.py) has tumor sites; a lineage that dies
-out is drawn again.  Barcodes: Cas9LineageTracingDataSimulator, with the edit rate set so that a share barcode_saturation of the sites is edited
-at the leaves.  Positions: the layout's tumor sites cut along the tree from the root down: a clade's sites are cut along their principal axis,
-turned by a Normal(0, territory_jitter) angle, into one contiguous part per child clade, of that clade's number of cells (territories()), so
-that every clade holds a territory within its parent's.  Clones: the clades at the earliest time at which n_clones clades hold at least
-clone_min of the cells, largest first; the smaller clades pooled (the last clone index).  Dispersal: the cells of a share `migrate` of the clones
-trade places with random tumor cells of the other clones.
+Lineage. We grow a lineage with the BirthDeathFitnessSimulator of Cassiopeia to as many leaves as the tissue layout (layout.py) has tumor sites,
+and simulate it again if it dies out.
+Barcodes. We simulate the barcodes with the Cas9LineageTracingDataSimulator, with the edit rate set so that an expected fraction
+barcode_saturation of the sites is edited at the leaves.
+Positions. We cut the tumor sites of the layout along the tree from the root down. We cut the sites of each clade along their principal axis,
+turned by an angle from Normal(0, territory_jitter), into one contiguous part per child clade with the number of cells of that clade
+(territories()), so that every clade occupies a territory within that of its parent.
+Clones. The clones are the clades at the earliest time at which n_clones clades contain at least a fraction clone_min of the cells, ordered from
+the largest, with the smaller clades pooled as the last clone index.
+Dispersal. We disperse a fraction `migrate` of the clones. To disperse a clone, we exchange the positions of its cells with those of random tumor
+cells of the clones that are not dispersed, or of any cells outside the clone when the dispersed clones contain most cells.
 
 Usage: python simulate.py <params.json> <seed> <layout.npz> <out.npz>
 """
@@ -17,7 +21,7 @@ import numpy as np
 
 
 def territories(parent, leaf_node, sites, rng, jitter=0.0):
-    """the tree's clades as nested territories on the sites; nodes in pre-order (a parent before its children)"""
+    """Assign the clades of the tree to nested territories on the sites, with the nodes in pre-order (each parent before its children)."""
     ch = [[] for _ in parent]
     for v, u in enumerate(parent):
         if u >= 0:
@@ -41,10 +45,12 @@ def territories(parent, leaf_node, sites, rng, jitter=0.0):
 
 
 def clones(parent, time, leaf_node, n_clones, clone_min):
-    """each leaf's clone (0 the largest; the last index the pooled smaller clades) and the number of clones including the pooled one"""
+    """Return the clone of each leaf (0 for the largest and the last index for the pooled smaller clades) and the number of clones including the
+    pooled one.
+    """
     n = len(leaf_node); root = int(np.where(parent < 0)[0][0]); nch = np.bincount(parent[parent >= 0], minlength=len(parent))
     cuts = np.sort(time[np.where(nch > 0)[0]])
-    def clades(cut):                                                                                # each leaf's highest ancestor at or after the cut
+    def clades(cut):                                                                                # the highest ancestor of each leaf at or after the cut
         v = leaf_node.copy()
         while True:
             u_ = parent[v]; mv = (u_ != root) & (u_ >= 0) & (time[np.maximum(u_, 0)] >= cut)
@@ -91,8 +97,8 @@ def main(pfile, seed, layout, out):
         mig = rng.choice(nbig, size=max(1, int(round(float(p["migrate"]) * nbig))), replace=False)
         for k in mig:
             i = np.where(clone == k)[0]; pop = np.where(~np.isin(clone, mig))[0]
-            if len(pop) < len(i):                                                                   # the dispersed clones hold most cells: trade with
-                pop = np.where(clone != k)[0]; i = rng.choice(i, size=min(len(i), len(pop)), replace=False)   # any cell outside the clone
+            if len(pop) < len(i):                                                                   # when the dispersed clones contain most cells, exchange
+                pop = np.where(clone != k)[0]; i = rng.choice(i, size=min(len(i), len(pop)), replace=False)   # with any cell outside the clone
             j = rng.choice(pop, size=len(i), replace=False); xy[i], xy[j] = xy[j].copy(), xy[i].copy()
     np.savez_compressed(out, leaves=np.array(leaves), xy=xy, clone=clone, K=K, migrating=mig, characters=cm, parent=parent, time=time, leaf_node=leaf_node,
                         depth=depth, edit_rate=rate, newick=tree.get_newick(record_branch_lengths=True))

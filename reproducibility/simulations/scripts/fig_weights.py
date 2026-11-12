@@ -1,12 +1,13 @@
-"""Fig. S5 (fig_options): weight 0 on the dispersed clones (environment benchmark_env; CPU).
+"""Fig. S5 (fig_options), weight 0 on the dispersed clones (environment benchmark_env, CPU).
 
-In each simulated tumor with one or two of its five clones dispersed over the section, with heritable programs of strength 0.06 (the
-benchmark's) and 0.3, SpOTr is fitted with the default clade weights and with weight 0 on the dispersed clones.  (A, B) For each dispersed clone of the tumors with one (A) and with two (B) dispersed clones, its Pearson correlation with the truth
-under both fits, side by side, a line joining the two; open markers for a clone that the dispersal left partly clustered (clustering above 0.1:
-the share of the ten nearest tumor neighbours of its cells that belong to the clone, above its share of the tumor, scaled to 1 for a fully
-clustered clone).  (C) The same for the other clones of these tumors, which keep their weights.
+In each simulated tumor with one or two of its five clones dispersed over the section, and with heritable programs of strength 0.06 (as in the
+benchmark) and 0.3, we fit SpOTr with the default clade weights and with weight 0 on the dispersed clones. (A, B) The Pearson correlation with
+the truth of each dispersed clone in the tumors with one (A) and two (B) dispersed clones, under both settings side by side and joined by a line.
+Open markers show a clone that remained partly clustered after the dispersal, with a clustering above 0.1. The clustering of a clone is the
+fraction of the ten nearest tumor neighbors of its cells that belong to the clone, above the fraction of the clone in the tumor, and scaled to 1
+for a fully clustered clone. (C) The same for the other clones of these tumors, whose weights we do not change.
 
-Usage: python fig_weights.py   (reads config.yaml and the results of rule spotr_weights; writes to common.paths.FIGURES)
+Usage: python fig_weights.py   (reads config.yaml and the results of rule spotr_weights, and writes to common.paths.FIGURES)
 """
 import sys
 from pathlib import Path
@@ -25,13 +26,15 @@ GRID, ORANGE, BROWN = "#e6e5e0", "#F47B20", "#7a3a10"
 
 
 def clustering(xy, clone, k, neighbours=10):
-    """the clone's clustering in the tissue: 0 dispersed at random, 1 every cell's nearest tumor neighbours in the clone"""
+    """Return the clustering of the clone in the tissue, which is 0 for a clone dispersed at random and 1 when the nearest tumor neighbors of every
+    cell of the clone belong to the clone.
+    """
     m = clone == k; s = m.mean(); nn = cKDTree(xy).query(xy[m], k=neighbours + 1)[1][:, 1:]
     return float((m[nn].mean() - s) / (1.0 - s))
 
 
 def changes(d):
-    """per scored clone: (dispersed, clustering, PCC with the default weights, PCC with weight 0 on the dispersed clones)"""
+    """Return (dispersed, clustering, PCC with the default weights, PCC with weight 0 on the dispersed clones) for each scored clone."""
     z = np.load(d / "spotr_weights.npz"); q = np.load(d / "problem.npz"); s = np.load(d / "sim.npz"); K = int(q["K"]); tr = q["traced"].astype(bool)
     oh = np.eye(K)[q["clone"][tr]]; Ncl = q["Ncl"].astype(float); h = Ncl.sum(1) > 0; Q = Ncl[h] / Ncl[h].sum(1, keepdims=True)
     ks = [k for k in range(K) if Ncl[:, k].sum() >= metrics.MIN_CELLS and Q[:, k].std() > 0]

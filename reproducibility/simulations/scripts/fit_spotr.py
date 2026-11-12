@@ -1,17 +1,19 @@
-"""SpOTr on one simulated tumor, through the package's interface (environment benchmark_env; GPU).
+"""SpOTr on one simulated tumor, through the interface of the package (environment benchmark_env, GPU).
 
-The dissociated cells as AnnData: their counts, each cell's type ("tumour", or its non-tumor type me<e>) and, for the tumor cells whose lineage
-is read, their clone (c<k>, or "pooled" for the smaller clades); the tree as the true distances between those cells.  The spots: their counts
-and positions.  The signatures: cell2location's regression on the dissociated cells, one per label (each non-tumor type, each clone, and the
-tumor cells without a lineage readout), cached in the seed folder as c2l_signatures.npz.
+The dissociated cells are an AnnData with their counts, the type of each cell ("tumour" or the non-tumor type me<e>) and, for the tumor cells
+whose lineage is read, their clone (c<k>, or "pooled" for the smaller clades). The tree is given as the true distances between those cells. The
+spots are an AnnData with their counts and positions. The signatures come from the regression model of cell2location on the dissociated cells,
+with one signature per label (each non-tumor type, each clone, and the tumor cells without a lineage readout), cached in the seed folder as
+c2l_signatures.npz.
 
-Modes (each writes <out>.npz and <out>.json):
-  fit      SpOTr at --alpha and --beta: the map (phi, traced cells x spots), each spot's proportions (proportions, spots x labels) and the
-           expression and structural costs.
-  grid     each alpha of --alphas at --beta: phi_<alpha>, the costs, and the elbow (the alpha that minimises the sum of the two costs, each
-           normalised between the smallest and the largest alpha).
-  weights  at --alpha and --beta, with the default clade weights (phi_default) and with weight 0 on the dispersed clones (phi_weights).
-  tuning   each setting of --alphas x --betas: phi_<alpha>_<beta>, and each setting's mean per-clone Pearson correlation with the truth.
+Modes, each writing <out>.npz and <out>.json:
+  fit      SpOTr at --alpha and --beta. Writes the map (phi, traced cells x spots), the proportions of each spot (proportions, spots x labels)
+           and the expression and structural costs.
+  grid     SpOTr at each alpha of --alphas and at --beta. Writes phi_<alpha>, the costs and the elbow, which is the alpha that minimizes the sum
+           of the two costs after normalizing each between the smallest and the largest alpha.
+  weights  SpOTr at --alpha and --beta, with the default clade weights (phi_default) and with weight 0 on the dispersed clones (phi_weights).
+  tuning   SpOTr at each setting of --alphas x --betas. Writes phi_<alpha>_<beta> and the mean per-clone Pearson correlation with the truth of
+           each setting.
 
 Usage: python fit_spotr.py <mode> <seed folder> <out.npz> [--alpha 0.2] [--beta 0.5] [--alphas 0,0.1,...] [--betas 0.25,...]
 """
@@ -30,7 +32,7 @@ import world  # noqa: E402
 
 
 def model(d):
-    """the SpOTr model of the seed folder d, and its problem"""
+    """Return the SpOTr model of the seed folder d and the simulated problem."""
     import anndata as ad, pandas as pd, spotr
     q, t = np.load(d / "problem.npz", allow_pickle=True), np.load(d / "trees.npz"); lab = world.labels(q, t); tr = q["traced"].astype(bool)
     names = np.array([f"cell{i}" for i in range(len(lab))]); genes = [f"g{j}" for j in range(q["Xc"].shape[1])]
@@ -46,7 +48,7 @@ def model(d):
 
 
 def clone_pcc(phi, q):
-    """the mean over clones of the Pearson correlation between each clone's true and mapped share of the spots"""
+    """Return the mean over clones of the Pearson correlation between the true and mapped proportions of each clone in the spots."""
     tr = q["traced"].astype(bool); pc = metrics.per_clone(np.asarray(phi, float).T @ np.eye(int(q["K"]))[q["clone"][tr]], q["Ncl"].astype(float))["PCC"]
     return float(np.mean(pc))
 

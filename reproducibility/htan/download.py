@@ -1,5 +1,5 @@
-"""Download HT260C1's files from the HTAN data portal's Synapse project (free Synapse account; credentials in ~/.synapseConfig) to
-$SPOTR_DATA/htan/raw.  Needs synapseclient (pip install synapseclient).
+"""Download the files of HT260C1 from the Synapse project of the HTAN data portal to $SPOTR_DATA/htan/raw, with a free Synapse account and its
+credentials in ~/.synapseConfig. Requires synapseclient (pip install synapseclient).
 
 Usage: python download.py
 """

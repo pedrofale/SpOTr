@@ -1,4 +1,4 @@
-# The simulation benchmark of the paper: simulated tumors, SpOTr and the other methods on each, and Figs. 2, S1, S2, S4 and S5.
+# The simulation benchmark of the paper, with the simulated tumors, SpOTr and the other methods on each tumor, and Figs. 2, S1, S2, S4 and S5.
 #   snakemake --cores 8 --resources gpu=1
 import os, json, sys
 from pathlib import Path
@@ -55,14 +55,14 @@ rule tree:
     log: f"{SEED_DIR}/logs/tree.log"
     shell: "{ENV} {PY[spotr]} scripts/tree.py {input.sim} {input.problem} {output} > {log} 2>&1"
 
-rule spotr:                                      # Fig. 2: SpOTr at the paper's alpha and beta
+rule spotr:                                      # Fig. 2, SpOTr at the alpha and beta of the paper
     input: rules.express.output, rules.tree.output
     output: f"{SEED_DIR}/spotr.npz"
     log: f"{SEED_DIR}/logs/spotr.log"
     resources: gpu=1
     shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py fit {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {output} --alpha {SP[alpha]} --beta {SP[beta]} > {log} 2>&1"
 
-rule spotr_grid:                                 # Fig. S4: over alpha, on the example world
+rule spotr_grid:                                 # Fig. S4, SpOTr over alpha on the example scenario
     input: rules.express.output, rules.tree.output
     output: f"{SEED_DIR}/spotr_grid.npz"
     log: f"{SEED_DIR}/logs/spotr_grid.log"
@@ -70,7 +70,7 @@ rule spotr_grid:                                 # Fig. S4: over alpha, on the e
     resources: gpu=1
     shell: "{ENV} {PY[spotr]} scripts/fit_spotr.py grid {OUT}/worlds/{wildcards.wid}/seed{wildcards.seed} {output} --alphas {params.alphas} --beta {SP[beta]} > {log} 2>&1"
 
-rule spotr_weights:                              # Fig. S5: weight 0 on the dispersed clones
+rule spotr_weights:                              # Fig. S5, weight 0 on the dispersed clones
     input: rules.express.output, rules.tree.output
     output: f"{SEED_DIR}/spotr_weights.npz"
     log: f"{SEED_DIR}/logs/spotr_weights.log"

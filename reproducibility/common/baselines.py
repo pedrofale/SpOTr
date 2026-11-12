@@ -1,17 +1,20 @@
-"""The methods SpOTr is compared with, run from their published packages with their documented settings (environment benchmark_env).
+"""The methods that we compare SpOTr with, run from their published packages with their documented settings (environment benchmark_env).
 
-destvi(Xc, labels, Y, seed)        scvi-tools: CondSCVI on the labelled dissociated cells (300 epochs), then DestVI on the spots (1,500 epochs);
-                                   each spot's proportion of every label (spots x labels) and the labels.
-scdot(Xc, labels, Y, seed)         scDOT from its repository (github.com/namtk/scDOT, commit da74a8a), run as its README documents: Adam at
-                                   learning rate 0.1 for 10 iterations on the cosine embedding loss between its transport plan and the
-                                   non-negative least squares deconvolution lifted to cells; returns its map (cells x spots).
-tangram(Xc, Y, mass, epochs, seed) Tangram's map_cells_to_space in mode "cells", with the spots' masses as its density prior (cells x spots).
-exact_ot(Xc, Y, mass)              exact optimal transport (POT's emd) under the cosine distance between log-normalised profiles (cells x spots).
+    destvi(Xc, labels, Y, seed)        CondSCVI of scvi-tools on the labeled dissociated cells (300 epochs), then DestVI on the spots (1,500
+                                       epochs). Returns the proportion of every label in each spot (spots x labels) and the labels.
+    scdot(Xc, labels, Y, seed)         scDOT from its repository (github.com/namtk/scDOT, commit da74a8a), run as its README documents, with Adam
+                                       at learning rate 0.1 for 10 iterations on the cosine embedding loss between its transport plan and the
+                                       non-negative least squares deconvolution lifted to cells. Returns its map (cells x spots).
+    tangram(Xc, Y, mass, epochs, seed) map_cells_to_space of Tangram in mode "cells", with the masses of the spots as its density prior. Returns
+    its map (cells x spots).
+    exact_ot(Xc, Y, mass)              Exact optimal transport (emd of POT) under the cosine distance between log-normalized profiles. Returns
+                                       the map (cells x spots).
 
-scDOT's inputs are those of its data loader: the cells normalised to 1e5 and log1p, the spots to 1e4 and log1p, each label's mean over its
-cells as the marker table, the labels one-hot.  Its net.py imports OptimalTransportLayer from transport.py, which does not define it, and uses
-nls_projgrad without importing it; both are supplied from the repository's own ddn.py and deconv.py when net.py is loaded, with no line of it
-changed.  Clone the repository to reproducibility/external/scDOT, or point $SPOTR_SCDOT at a clone.
+The inputs of scDOT are those of its data loader, with the cells normalized to 1e5 and log-transformed, the spots normalized to 1e4 and
+log-transformed, the mean of each label over its cells as the marker table, and the labels one-hot encoded. Its net.py imports
+OptimalTransportLayer from transport.py, which does not define it, and uses nls_projgrad without importing it. We supply both from ddn.py and
+deconv.py of the same repository when we load net.py, without changing any of its lines. Clone the repository to reproducibility/external/scDOT,
+or set $SPOTR_SCDOT to the path of a clone.
 """
 import importlib.util
 import os
