@@ -1,37 +1,50 @@
-"""HT260C1 (colorectal cancer liver metastasis; Mo et al. 2024): the dissociated nuclei and the Visium section, their copy-number clones and the
-references the scores use.  Writes $SPOTR_DATA/htan/sc.h5ad and st.h5ad.
+"""HT260C1 (a colorectal cancer liver metastasis, Mo et al. 2024), with the dissociated nuclei, the Visium section, their copy number clones and the
+CNA signal of the spots that the scores use. Writes $SPOTR_DATA/htan/sc.h5ad and st.h5ad.
 
-Inputs, in $SPOTR_DATA/htan/raw (README: where to download them):
+Inputs, in $SPOTR_DATA/htan/raw (see README.md for where to download them):
   HT260C1-Th1K1-{matrix.mtx.gz,features.tsv.gz,barcodes.tsv.gz}              the multiome nuclei (expression and ATAC peaks)
   HT260C1-Th1K1Fc2U1Z1Bs1-{matrix.mtx.gz,features.tsv.gz,barcodes.tsv.gz}    the Visium section
   HT260C1-Th1K1Fc2U1Z1Bs1-tissue_positions_list.csv, -scalefactors_json.json, B1-HT260C1-Th1K1Fc2U1.tif (the H&E)
-  HT260C1-Th1K1XBmn1-1_arm_level.tsv                                           the authors' per-nucleus copy-number table
-  HT260C1_sn_meta.tsv, HT260C1-Th1K1Fc2U1Z1Bs1_st_meta.tsv                    the authors' cell types and spot purity (metadata.R)
+  HT260C1-Th1K1XBmn1-1_arm_level.tsv                                           the copy number table of the authors for each nucleus
+  HT260C1_sn_meta.tsv, HT260C1-Th1K1Fc2U1Z1Bs1_st_meta.tsv                    the cell types and spot purity of the authors (metadata.R)
   gene_positions.csv.gz (in this folder)                                       GRCh38 gene coordinates
 
-Genes.  The genes measured in both the nuclei and the section are split at random into two halves (seed 0).  SpOTr and every method fit genes
-of the first half, those kept by cell2location's filter_genes rule on the nuclei (detected in more than 3% of the nuclei, or in more than 5
-with a mean non-zero count above 1.12) less a random tenth held out; the copy-number references of the spots use only the second half.
-Spots: in the tissue, with the authors' purity estimate, and at least 200 counts on the fitted genes.  Nuclei: the authors' annotation
-without "Low quality".
+The Supplementary Methods of the paper (Clones and tree of HT260C1) describe these steps.
 
-Clones.  Copy-number arm scores of the nuclei (copynumber.py).  The tumour nuclei in the deepest 60% by UMI are split in two by Ward
-clustering of their depth-regressed arm scores; on the arms that differ (effect >= 0.5 sd, moved with most of their genes) each tumour
-nucleus is called A or B by the multinomial likelihood ratio of its counts under the two groups' arm shares (deepest 40% of nuclei, prior
-1/2; posterior >= 0.9; only the deepest 60% are called).  B splits into B1 and B2 along its first principal axis of depth-regressed arm scores
-(two-component Gaussian mixture).  The tumour nuclei left uncalled are called by adding the evidence of their ATAC arm coverage (logistic
-regressions trained on the called nuclei) to the RNA's (A / B, then B1 / B2; combined posterior >= 0.9 or <= 0.1); tumour nuclei in
-expression clusters (Leiden) of at least 30% non-tumour nuclei are dropped, as are those still uncalled.  B1's two sub-lineages, B1a and B1b:
-a two-component Gaussian mixture on B1's first principal axis of depth-regressed unsmoothed arm means.  No method is given B1a and B1b.
+Genes. We split the genes measured in both the nuclei and the section at random into two halves (seed 0). SpOTr and every other method fit the
+genes of the first half that the filter_genes rule of cell2location keeps on the nuclei (detected in more than 3% of the nuclei, or in more than
+5 nuclei with a mean non-zero count above 1.12), minus a random tenth that we hold out. We compute the CNA signal of the spots on the second half only.
+Spots and nuclei. We keep the spots in the tissue that have a tumor purity estimate of the authors (from ESTIMATE) and at least 200 counts on the
+fitted genes, and the nuclei that the authors did not annotate as "Low quality".
 
-Each cancer nucleus's copy-number profile: its 39 arm scores, log UMI regressed out and standardised (sc.obsm["cn_profile"]); SpOTr's tree is
-built from their distances (fit.py).
+Clones. We compute the CNA scores of the nuclei (copynumber.py) and call the clones in the following steps.
+  1. We regress the log total counts out of the CNA scores of the tumor nuclei, and split the 60% of tumor nuclei with the most counts into two
+  groups by Ward clustering.
+  2. We select the chromosome arms that differ between the two groups, with an effect of at least 0.5 standard deviations and with most of their
+  genes changing in the same direction.
+  3. We call each of the 60% of tumor nuclei with the most counts A or B by the multinomial likelihood ratio of its counts on these chromosome
+  arms under the two groups, with the proportions of counts estimated from the 40% of nuclei with the most counts, equal priors and a posterior
+  of at least 0.9.
+  4. We split B into B1 and B2 with a Gaussian mixture model (GMM) with two components along the first principal component of its CNA scores,
+  with the log total counts regressed out.
+  5. We call the remaining tumor nuclei by adding the evidence of their CNA scores from ATAC, from logistic regressions trained on the called
+  nuclei, to the evidence from expression, first for A against B and then for B1 against B2, at a combined posterior of at least 0.9 or at most
+  0.1.
+  6. We leave out the tumor nuclei in Leiden expression clusters of which at least 30% are non-tumor nuclei, and the tumor nuclei that remain
+  uncalled.
+  7. We split B1 into the sub-lineages B1a and B1b with a GMM with two components along the first principal component of the unsmoothed CNA
+  scores of its nuclei, with the log total counts regressed out. No method is given B1a and B1b.
 
-References (spots; second-half genes only; arm scores centred on the 20% lowest-purity spots, purity regressed out):
-  ref_ba         the B-minus-A signal, the projection on the nuclei's A / B arm effect (tumour spots: purity above the median);
-  ref_wb         B's within-clone signal, the projection on B's B1 / B2 axis (where ref_ba > 0);
-  b1_signal      B1b-minus-B1a, the projection on the sub-lineages' arm difference;
-  b1_territory   B1's territory: ref_ba > 0.5 sd and ref_wb > 0.
+The CNA profile of each cancer nucleus is its 39 CNA scores with the log total counts regressed out and standardized (sc.obsm["cn_profile"]), and
+fit.py builds the tree of SpOTr from the distances between these profiles.
+
+CNA signal of the spots. We compute the CNA scores of the spots on the second half of the genes, with the 20% of spots with the lowest purity as
+the reference, and regress the purity out.
+  ref_ba         The signal for B against A, the projection on the difference between A and B in the CNA scores of the nuclei (on the spots with
+                 a purity above the median).
+  ref_wb         The signal within B, the projection on the axis between B1 and B2 (on the spots with ref_ba > 0).
+  b1_signal      The signal for B1b against B1a, the projection on the difference between the CNA scores of the sub-lineages.
+  b1_territory   The territory of B1, the spots with ref_ba above 0.5 standard deviations and ref_wb > 0.
 
 Usage: python prepare.py [raw folder]   (benchmark_env, CPU)
 """
@@ -51,7 +64,7 @@ SEED, MIN_SPOT = 0, 200
 
 
 def c2l_filter(X, cell_count_cutoff=5, cell_percentage_cutoff2=0.03, nonz_mean_cutoff=1.12):
-    """cell2location.utils.filtering.filter_genes's rule"""
+    """Return the genes that the rule of cell2location.utils.filtering.filter_genes keeps."""
     n = np.asarray((X > 0).sum(0)).ravel().astype(float); nz = np.asarray(X.sum(0)).ravel() / np.maximum(n, 1.0)
     with np.errstate(divide="ignore"):
         return (np.log10(n) > np.log10(X.shape[0] * cell_percentage_cutoff2)) | ((np.log10(n) > np.log10(cell_count_cutoff)) & (np.log10(nz) > np.log10(nonz_mean_cutoff)))
@@ -62,7 +75,7 @@ def logit(p):
 
 
 def load(raw):
-    """the nuclei (expression and peaks), the section, the authors' annotations and the gene positions"""
+    """Load the nuclei (expression and peaks), the section, the annotations of the authors and the gene positions."""
     M, f, b = cn.read10x(raw / NUCLEI); gex = (f[2] == "Gene Expression").to_numpy(); pk = (f[2] == "Peaks").to_numpy()
     Mv, fv, bv = cn.read10x(raw / SECTION); gv = (fv[2] == "Gene Expression").to_numpy()
     return dict(G=M[:, gex], gf=f[gex].reset_index(drop=True), P=M[:, pk], pf=f[pk].reset_index(drop=True), b=b, Xv=Mv[:, gv], fv=fv[gv].reset_index(drop=True), bv=bv,
@@ -76,20 +89,24 @@ def load(raw):
 
 # ------------------------------------------------------------------------------------------------------------------------- the clones
 def profiles(d):
-    """every annotated nucleus's smoothed arm scores (the profiles behind B's axis and the tree), centred on the non-tumour nuclei"""
+    """Return the smoothed CNA scores of every annotated nucleus (the profiles for the axis of B and for the tree), with the non-tumor nuclei as
+    reference.
+    """
     rows = np.isin(d["b"], d["meta"].index); ct = d["meta"].loc[d["b"][rows], "cell_type"].to_numpy()
     S = cn.arm_scores(d["G"][rows], d["gf"][0].to_numpy(), d["gp"], ct != "Tumor", 0.05, total="used"); S.index = d["b"][rows]; return S
 
 
 def nuclei(d):
-    """the nuclei kept (the authors' annotation without "Low quality"), in the matrix's order, and their cell types"""
+    """Return the nuclei kept (those that the authors did not annotate as "Low quality"), in the order of the matrix, and their cell types."""
     keep = np.isin(d["b"], d["meta"].index[d["meta"].cell_type != "Low quality"]); b = d["b"][keep]; ct = d["meta"].loc[b, "cell_type"].to_numpy()
     return keep, b, np.where(ct == "Tumor", "tumour", ct)
 
 
 def split_ab(d):
-    """the deep tumour nuclei split in two (Ward on depth-regressed arm scores), each arm's effect (sd units, rounded to 3 decimals) and
-    breadth (the share of its genes moved with it, for the six arms of largest effect)"""
+    """Split the tumor nuclei with the most counts in two by Ward clustering of their CNA scores with depth regressed out, and return the effect (in
+    standard deviations, rounded to 3 decimals) and the breadth of each chromosome arm. The breadth is the fraction of the genes of the
+    chromosome arm that change in the same direction, for the six chromosome arms with the largest effects.
+    """
     from scipy.cluster.hierarchy import linkage, fcluster
     keep, b, ct = nuclei(d); X = d["G"][keep]; ids = d["gf"][0].to_numpy(); tum = ct == "tumour"; umi = np.asarray(X.sum(1)).ravel()
     S = cn.arm_scores(X, ids, d["gp"], ~tum, 0.05); S.index = b
@@ -107,7 +124,9 @@ def split_ab(d):
 
 
 def call_ab(d, sp):
-    """A / B for every tumour nucleus: the multinomial likelihood ratio of its counts on the differing arms under the two groups' arm shares"""
+    """Call A or B for every tumor nucleus by the multinomial likelihood ratio of its counts on the differing chromosome arms under the proportions
+    of counts of the two groups.
+    """
     sizes = pd.Series(sp["k2"][sp["k2"] > 0]).value_counts(); small, large = int(sizes.idxmin()), int(sizes.idxmax())
     eff, brd = sp["effect"], sp["breadth"]
     arms = [a for a in eff.index if abs(eff[a]) >= 0.5 and brd.get(a, 0) >= 0.7] or [a for a in brd if brd[a] >= 0.7]
@@ -126,7 +145,9 @@ def call_ab(d, sp):
 
 
 def split_b(S, asg, b, cl):
-    """B1 / B2: B's first principal axis of the depth-regressed arm scores (oriented chr4p up), a two-component Gaussian mixture"""
+    """Split B into B1 and B2 with a GMM with two components along the first principal component of its CNA scores with depth regressed out
+    (oriented with chr4p up).
+    """
     from sklearn.mixture import GaussianMixture
     tr = np.isin(cl, ["A", "B"]); idx = b[tr]; X = S.reindex(idx).to_numpy(float); u = np.log(asg.loc[idx, "umi"].to_numpy(float))
     Dm = np.column_stack([np.ones(len(u)), u]); X = X - Dm @ np.linalg.lstsq(Dm, X, rcond=None)[0]; Z = (X - X.mean(0)) / X.std(0)
@@ -139,8 +160,9 @@ def split_b(S, asg, b, cl):
 
 
 def expression_clusters_mixed(Xc, ct):
-    """the tumour nuclei in Leiden clusters (resolution 1 on 2,000 highly variable genes, 30 principal components, 15 neighbours) of which at
-    least 30% are non-tumour nuclei"""
+    """Return the tumor nuclei in Leiden clusters (resolution 1 on 2,000 highly variable genes, 30 principal components and 15 neighbors) of which
+    at least 30% are non-tumor nuclei.
+    """
     import scanpy as sc, anndata as ad
     a = ad.AnnData(np.array(Xc, np.float32, copy=True)); sc.pp.normalize_total(a, target_sum=1e4); sc.pp.log1p(a)
     sc.pp.highly_variable_genes(a, n_top_genes=2000); a = a[:, a.var["highly_variable"]].copy()
@@ -150,7 +172,9 @@ def expression_clusters_mixed(Xc, ct):
 
 
 def call_rest(d, S, asg, b, ct, lab, drop):
-    """the uncalled tumour nuclei: RNA and ATAC evidence added, A / B then B1 / B2 (combined posterior >= 0.9 or <= 0.1)"""
+    """Call the remaining tumor nuclei by adding the evidence from ATAC to that from expression, first for A against B and then for B1 against B2
+    (combined posterior >= 0.9 or <= 0.1).
+    """
     from sklearn.linear_model import LogisticRegression
     from sklearn.mixture import GaussianMixture
     tum = (ct == "tumour") & ~drop; tb = b[tum]; lab = lab[tum]; a = asg.reindex(tb); umi = a["umi"].to_numpy(float)
@@ -174,8 +198,11 @@ def call_rest(d, S, asg, b, ct, lab, drop):
 
 
 def sublineages(d, b1, gp_arms_peaks):
-    """B1a / B1b: the unsmoothed arm means of B1's nuclei, depth regressed out, their first principal axis, a two-component Gaussian mixture;
-    returns the mixture's label per B1 nucleus (1 = B1b) and the sub-lineages' arm difference (B1b minus B1a)"""
+    """Split B1 into B1a and B1b with a GMM with two components along the first principal component of the unsmoothed CNA scores of its nuclei, with
+    depth regressed out.
+
+    Returns the label of each nucleus of B1 (1 for B1b) and the difference between the CNA scores of the sub-lineages (B1b minus B1a).
+    """
     from sklearn.mixture import GaussianMixture
     keep, b, _ = nuclei(d); ct = d["meta"].loc[b, "cell_type"].to_numpy()
     R, umi = cn.arm_means(d["G"][keep], d["gf"][0].to_numpy(), d["gp"], ct != "Tumor"); R.index = b
@@ -207,7 +234,7 @@ def main(raw=None):
     S = profiles(d); sp = split_ab(d); asg = call_ab(d, sp)
     cl = np.where(ctype == "tumour", asg["clone"].reindex(bs).fillna("").to_numpy(), ""); bsub, bload = split_b(S, asg, bs, cl)
     lab = np.where(cl == "A", "A", np.where(bsub == "B1", "B1", np.where(bsub == "B2", "B2", "")))
-    # the spots' references
+    # the CNA signal of the spots
     pur = stm.loc[sb, "Tumor_purity_estimate"].to_numpy(float)
     Sv = cn.arm_scores(Xv[kv], ids_v, gp, pur <= np.percentile(pur, 20), 0.10, allowed=poolR)
     small = int(pd.Series(sp["k2"][sp["k2"] > 0]).value_counts().idxmin()); e = sp["effect"] if small == 2 else -sp["effect"]
@@ -216,18 +243,18 @@ def main(raw=None):
     ev_ = e.reindex(arms).to_numpy(); wl = bload.reindex(arms).fillna(0.0).to_numpy()
     ref_ba = np.full(len(sb), np.nan); ref_ba[tum] = T @ (ev_ / np.linalg.norm(ev_))
     ref_wb = np.full(len(sb), np.nan); ref_wb[tum] = T @ (wl / np.linalg.norm(wl)); ref_wb[~(ref_ba > 0)] = np.nan
-    # the uncalled tumour nuclei, then the nuclei kept
+    # the remaining tumor nuclei, then the nuclei kept
     drop = expression_clusters_mixed(Xc, ctype); calls = call_rest(d, S, asg, bs, ctype, lab, drop)
     final = pd.Series(np.where(calls["label"] != "", calls["label"], calls["new_label"]), index=calls.index).reindex(bs).fillna("").to_numpy().astype(str)
-    kn = (ctype != "tumour") | (np.isin(bs, calls.index) & (final != "")); print(f"dropped {int((~kn).sum())} tumour nuclei; kept {kn.sum()}", flush=True)
-    # B1's sub-lineages and their signal in the spots
+    kn = (ctype != "tumour") | (np.isin(bs, calls.index) & (final != "")); print(f"dropped {int((~kn).sum())} tumor nuclei; kept {kn.sum()}", flush=True)
+    # the sub-lineages of B1 and their signal in the spots
     h, sig = sublineages(d, bs[bsub == "B1"], set(cn.peak_arms(d["pf"])[1]))
     Sa = Sv.to_numpy().copy(); Sa = Sa - np.outer(pur - pur.mean(), np.polyfit(pur, Sa, 1)[0]); Sa = (Sa - Sa.mean(0)) / Sa.std(0); Sa = pd.DataFrame(Sa, columns=Sv.columns)
     a_ = [a for a in sig.index if a in Sa.columns]; b1_signal = Sa[a_].to_numpy() @ (sig[a_].to_numpy() / np.linalg.norm(sig[a_].to_numpy()))
     ok = np.isfinite(ref_ba); zz = np.full(len(sb), np.nan); zz[ok] = (ref_ba[ok] - ref_ba[ok].mean()) / ref_ba[ok].std()
     with np.errstate(invalid="ignore"):
         terr = ok & (zz > 0.5) & np.isfinite(ref_wb) & (ref_wb > 0)
-    # the cancer nuclei's copy-number profiles
+    # the CNA profiles of the cancer nuclei
     kb, kct, kl = bs[kn], ctype[kn], final[kn]; tr = kct == "tumour"; ti = np.where(tr)[0]
     X = S.reindex(kb[ti]).to_numpy(float); u = np.log(asg.loc[kb[ti], "umi"].to_numpy(float)); Dm = np.column_stack([np.ones(len(u)), u])
     X = X - Dm @ np.linalg.lstsq(Dm, X, rcond=None)[0]; prof = np.full((len(kb), X.shape[1]), np.nan); prof[ti] = (X - X.mean(0)) / X.std(0)
@@ -247,7 +274,7 @@ def main(raw=None):
     st_.uns["um_per_pixel"] = um
     sc_.write_h5ad(out / "sc.h5ad", compression="gzip"); st_.write_h5ad(out / "st.h5ad", compression="gzip")
     print(f"wrote {out}/sc.h5ad ({sc_.n_obs} nuclei: " + ", ".join(f"{k} {int((kl[tr] == k).sum())}" for k in ("A", "B1", "B2"))
-          + f"; B1a {int((sub_l == 'B1a').sum())}, B1b {int((sub_l == 'B1b').sum())}) and st.h5ad ({st_.n_obs} spots, {int(terr.sum())} in B1's territory)")
+          + f"; B1a {int((sub_l == 'B1a').sum())}, B1b {int((sub_l == 'B1b').sum())}) and st.h5ad ({st_.n_obs} spots, {int(terr.sum())} in the territory of B1)")
     return dict(Xc=Xc, Y=Y, xy=xy, bs=bs, ctype=ctype, sb=sb, fitg=fitg, S=S, sp=sp, asg=asg, bsub=bsub, bload=bload, ref_ba=ref_ba, ref_wb=ref_wb,
                 drop=drop, calls=calls, kn=kn, h=h, sig=sig, b1_signal=b1_signal, terr=terr, prof=prof, sub_l=sub_l, final=final)
 

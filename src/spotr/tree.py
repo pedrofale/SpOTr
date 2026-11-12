@@ -1,8 +1,9 @@
-"""Trees for SpOTr: from a Newick string, a networkx DiGraph or a TreeData object to the distances between the cells, and clones cut from a tree.
+"""Trees for SpOTr, read from a Newick string, a networkx DiGraph or a TreeData object, with the distances between their leaves and clones cut from
+them.
 
-Every tree's leaves are cell names (the dissociated AnnData's obs_names).  Branch lengths come from the Newick lengths, from an edge attribute
-(`length_key`), or from a node attribute holding each node's depth or time (`depth_key`, as pycea and treedata store them); without any, every
-branch has length 1.
+The leaves of every tree are cell names (the obs_names of the dissociated AnnData). The branch lengths come from the Newick lengths, from an edge
+attribute (`length_key`), or from a node attribute with the depth or time of each node (`depth_key`, as pycea and treedata store them). Every
+branch has length 1 when none of these is given.
 """
 from __future__ import annotations
 
@@ -11,7 +12,8 @@ import numpy as np
 
 # ---------------------------------------------------------------------------------------------------------------- reading trees
 def parse_newick(s: str):
-    """(names, parent, length) of every node in pre-order (a parent before its children); internal nodes may be unnamed"""
+    """Return the names, parents and branch lengths of every node in pre-order, with each parent before its children. Internal nodes may be unnamed.
+    """
     import sys
     s = s.strip().rstrip(";"); names, parent, length = [], [], []; pos = [0]
     def node(p):
@@ -44,7 +46,8 @@ def parse_newick(s: str):
 
 
 def from_networkx(G, length_key: str = "length", depth_key: str | None = None):
-    """(names, parent, length) in pre-order from a rooted networkx DiGraph (edges from parent to child)"""
+    """Return the names, parents and branch lengths of every node in pre-order, from a rooted networkx DiGraph with edges from parent to child.
+    """
     import networkx as nx
     root = [n for n in G.nodes if G.in_degree(n) == 0]
     if len(root) != 1:
@@ -62,8 +65,9 @@ def from_networkx(G, length_key: str = "length", depth_key: str | None = None):
 
 # ---------------------------------------------------------------------------------------------------------------- distances
 def leaf_distances(parent, length, leaf_rows: dict) -> np.ndarray:
-    """patristic distances among the leaves listed in leaf_rows (node index -> row), from parent pointers in pre-order and branch lengths;
-    each internal node writes the distances between the leaves of its different children at once"""
+    """Return the patristic distances between the leaves in `leaf_rows` (node index -> row), from parent pointers in pre-order and branch lengths.
+    The distances between the leaves below different children of each internal node are set at once.
+    """
     parent = np.asarray(parent); n_nodes = len(parent); depth = np.zeros(n_nodes)
     for v in range(n_nodes):
         if parent[v] >= 0:
@@ -90,8 +94,9 @@ def leaf_distances(parent, length, leaf_rows: dict) -> np.ndarray:
 
 
 def tree_distances(tree, cells, tree_key: str | None = None, length_key: str = "length", depth_key: str | None = None) -> np.ndarray:
-    """the tree distances between `cells` (names of leaves, in that order), for a Newick string, a networkx DiGraph or a TreeData object
-    (tree_key: which of its .obst trees; default its only or first one)"""
+    """Return the tree distances between `cells`, given as leaf names and in that order, for a Newick string, a networkx DiGraph or a TreeData
+    object. For a TreeData object, `tree_key` selects one of its `.obst` trees (default the only or first one).
+    """
     if isinstance(tree, str):
         names, parent, length = parse_newick(tree)
     elif hasattr(tree, "obst"):                                                                 # treedata.TreeData (pycea)
@@ -109,15 +114,17 @@ def tree_distances(tree, cells, tree_key: str | None = None, length_key: str = "
 
 
 def cut_clones(D: np.ndarray, n_clones: int) -> np.ndarray:
-    """clones as the n_clones groups of an average-linkage clustering of the tree distances (0 .. n_clones - 1)"""
+    """Return clones (0 .. n_clones - 1) as the n_clones groups of an average-linkage clustering of the tree distances."""
     from scipy.cluster.hierarchy import linkage, fcluster
     from scipy.spatial.distance import squareform
     return fcluster(linkage(squareform(D, checks=False), method="average"), t=int(n_clones), criterion="maxclust") - 1
 
 
 def subtree(parent, length, keep: dict):
-    """(names, parent, length) in pre-order of the tree induced on the leaves in keep (node index -> name): the nodes on their paths to the
-    root, with every node of a single child merged into it (branch lengths added)"""
+    """Return the names, parents and branch lengths in pre-order of the tree induced on the leaves in `keep` (node index -> name). The induced tree
+    contains the nodes on the paths from these leaves to the root, and every node with a single child is merged with it, adding the branch
+    lengths.
+    """
     parent = np.asarray(parent); on = np.zeros(len(parent), bool)
     for v in keep:
         u = int(v)
@@ -139,7 +146,7 @@ def subtree(parent, length, keep: dict):
 
 
 def to_newick(parent, length, names) -> str:
-    """the tree as a Newick string (leaves and internal nodes by name, branch lengths after ':')"""
+    """Return the tree as a Newick string, with leaves and internal nodes by name and branch lengths after ':'."""
     parent = np.asarray(parent); kids = [[] for _ in parent]
     for v, p in enumerate(parent):
         if p >= 0:

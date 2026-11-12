@@ -1,9 +1,9 @@
-"""Spatial plots through squidpy: spots() draws one value or colour per spot, cells() draws single cells as points.
+"""Spatial plots through squidpy, with spots() for one value or color per spot and cells() for single cells as points.
 
-`colors` is a list of colours (one per spot or cell, drawn as a categorical whose categories are the colours themselves, so callers keep their
-own palettes) or a numeric array (drawn with `cmap`).  Spots are squares of side `pitch` or Visium circles (shape="circle"); with `image` (an
-RGB array and its scale factors, as Space Ranger writes them) the tissue image is drawn underneath and `xy` are full-resolution pixel
-coordinates.
+`colors` is a list of colors, one per spot or cell, or a numeric array drawn with `cmap`. A list of colors is drawn as a categorical variable
+whose categories are the colors themselves, so that callers keep their own palettes. Spots are squares of side `pitch` or Visium circles
+(shape="circle"). When `image` is given, as an RGB array and its scale factors as Space Ranger writes them, the tissue image is drawn underneath
+and `xy` are full-resolution pixel coordinates.
 """
 import numpy as np
 
@@ -24,11 +24,12 @@ def _adata_for(xy, values, key="value", pitch=None, image=None, library="slide")
 
 
 def cells(ax, xy, colors, title, size=4.0, fontsize=10, extent=None):
-    """single cells as points (y down, as spots() draws spots); `extent` (xmin, xmax, ymin, ymax) to match a spots() panel"""
+    """Draw single cells as points, with y pointing down as in spots(). `extent` (xmin, xmax, ymin, ymax) matches the limits of a spots() panel.
+    """
     import squidpy as sq
     a = _adata_for(xy, colors)
     sq.pl.spatial_scatter(a, shape=None, color="value", ax=ax, title=title, legend_loc=None, frameon=False, size=size)
-    for c_ in ax.collections:                                                                   # thousands of points: rasterized, so the PDF loads fast
+    for c_ in ax.collections:                                                                   # thousands of points, rasterized so that the PDF loads fast
         c_.set_rasterized(True)
     ax.set_aspect("equal"); ax.set_xlabel(""); ax.set_ylabel(""); ax.title.set_fontsize(fontsize)
     if extent is not None:
@@ -37,8 +38,9 @@ def cells(ax, xy, colors, title, size=4.0, fontsize=10, extent=None):
 
 
 def spots(ax, xy, colors, title, pitch=None, image=None, cmap=None, norm=None, shape="square", flip=False, scalebar_um=None, fontsize=10, size=1.0, img_alpha=None, colorbar=None):
-    """one value per spot on `ax`; squares of side `pitch` (default: the median nearest-neighbour distance) unless `image` is given; with `image`,
-    `size` scales the Visium spot diameter and `img_alpha` dims the tissue image under the spots"""
+    """Draw one value per spot on `ax`, as squares of side `pitch` (default the median nearest-neighbor distance) or, when `image` is given, as
+    Visium circles over the tissue image. `size` then scales the spot diameter and `img_alpha` dims the tissue image under the spots.
+    """
     import squidpy as sq
     xy = np.asarray(xy, float).copy()
     if flip:
@@ -50,12 +52,12 @@ def spots(ax, xy, colors, title, pitch=None, image=None, cmap=None, norm=None, s
         a = _adata_for(xy, np.zeros(len(xy)), pitch=pitch, image=image); sq.pl.spatial_scatter(a, library_id="slide", img_res_key="lowres", color=None, ax=ax, title=title, frameon=False)
         ax.set_aspect("equal"); ax.set_xlabel(""); ax.set_ylabel(""); ax.title.set_fontsize(fontsize); return ax
     a = _adata_for(xy, colors, pitch=pitch, image=image)
-    kw = dict(color="value", ax=ax, title=title, legend_loc=None, colorbar=(cmap is not None) if colorbar is None else colorbar, frameon=False)   # colorbar=False: the caller places it
+    kw = dict(color="value", ax=ax, title=title, legend_loc=None, colorbar=(cmap is not None) if colorbar is None else colorbar, frameon=False)   # colorbar=False when the caller places the colorbar
     if image is not None:
         sq.pl.spatial_scatter(a, library_id="slide", img_res_key="lowres", shape="circle", size=size, img_alpha=img_alpha, cmap=cmap, norm=norm, na_color=(0, 0, 0, 0), **kw)
     else:
         sq.pl.spatial_scatter(a, library_id="slide", img=False, shape=shape, scale_factor=1.0, size=1.0, cmap=cmap, norm=norm, **kw)
-    for c_ in ax.collections:                                                                   # thousands of spots: rasterized, so the PDF loads fast
+    for c_ in ax.collections:                                                                   # thousands of spots, rasterized so that the PDF loads fast
         c_.set_rasterized(True)
     ax.set_aspect("equal"); ax.set_xlabel(""); ax.set_ylabel(""); ax.title.set_fontsize(fontsize)
     if scalebar_um and image is None:

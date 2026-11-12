@@ -1,15 +1,15 @@
-"""Fig. 3: SpOTr and the compared methods on PEtracer section M3-4 (other sections: a figure of their own name).
+"""Fig. 3, SpOTr and the compared methods on PEtracer section M3-4 (for another section, a figure named after the section).
 
-(A)    the cells of the measured half at their in situ positions: traced malignant cells by clade, malignant cells without a lineage readout
-       in grey, the non-tumor cells pooled.
-(B-G)  the synthetic Visium spots' truth and each method's estimate, every spot in two levels: non-tumor where its non-tumor cells (every
-       type pooled) outnumber its tumor cells (traced or not), otherwise the majority clade among its cells with a lineage readout (grey when
-       it has none).  Spots drawn as circles of 1.6 x the spot diameter.
-(H-K)  per-clone agreement with the truth (common.metrics.per_clone over the clones with at least 20 true cells): PCC, SSIM (higher is
-       better), RMSE and Jensen-Shannon divergence (lower is better); one point per clone.
+(A)    The cells of the measured half at their in situ positions, with the traced malignant cells colored by clade, the malignant cells without a
+lineage readout in gray and the non-tumor cells pooled.
+(B-G)  The truth of the synthetic Visium spots and the estimate of each method, with every spot colored in two levels. A spot is non-tumor when
+it contains more non-tumor cells (all types pooled) than tumor cells (traced or not), and otherwise takes the color of the majority clade among
+the cells of the spot with a lineage readout (gray when there is none). The spots are drawn as circles of 1.6 times the spot diameter.
+(H-K)  The per-clone agreement with the truth (common.metrics.per_clone over the clones with at least 20 true cells), with PCC and SSIM (higher
+is better), RMSE and Jensen-Shannon divergence (lower is better), and one point per clone.
 
-Reads $SPOTR_DATA/petracer/<section>/ (prepare.py) and $SPOTR_RESULTS/petracer/<section>/<method>.npz (fit.py); writes
-$SPOTR_FIGURES/fig_petracer_methods.{pdf,png} and prints each method's mean scores.
+Reads $SPOTR_DATA/petracer/<section>/ (prepare.py) and $SPOTR_RESULTS/petracer/<section>/<method>.npz (fit.py), writes
+$SPOTR_FIGURES/fig_petracer_methods.{pdf,png}, and prints the mean scores of each method.
 
 Usage: python figure.py [section=M3-4]   (environment benchmark_env)
 """
@@ -33,7 +33,7 @@ MUTED = ["#d8d2c4", "#a89f8e", "#c9c0ad", "#8f8676", "#e2dccf", "#b5ac99", "#9c9
 
 
 def palette(clones, others):
-    """clade colours (tab20 without its greys), muted shades for the non-tumor types, greys for the tumor without a clone"""
+    """Return the clade colors (tab20 without its grays), muted shades for the non-tumor types and grays for the tumor cells without a clade."""
     tab = plt.get_cmap("tab20"); pal = [to_hex(tab(i)) for i in list(range(0, 20, 2)) + list(range(1, 20, 2)) if i not in (14, 15)]
     col = {c: pal[i % len(pal)] for i, c in enumerate(clones) if c != "pooled"}; col["pooled"] = "#e0b0d0"
     col.update({e: MUTED[i % len(MUTED)] for i, e in enumerate(others)})
@@ -43,7 +43,9 @@ def palette(clones, others):
 
 
 def two_level(comp, keys, clones, others, col):
-    """each spot's colour: non-tumor, else its majority clade among the cells with a lineage readout, else grey"""
+    """Return the color of each spot, which is non-tumor, or else the majority clade among the cells of the spot with a lineage readout, or else
+    gray.
+    """
     comp = np.asarray(comp, float); ci = [keys.index(c) for c in clones]; mi = [keys.index(e) for e in others]; ui = keys.index(CANCER)
     C = comp[:, ci]; tum = C.sum(1) + comp[:, ui]; non = comp[:, mi].sum(1)
     lab = np.where(non >= tum, "nontumor", np.where(C.sum(1) > 1e-9, np.array(clones)[C.argmax(1)], "notrace"))
@@ -68,14 +70,14 @@ def main(section="M3-4"):
     maps = [(title, comp_of(m)) for title, m, _ in METHODS]
     panels = []
     fig = plt.figure(figsize=(28, 9.5)); gs = fig.add_gridspec(2, 8, height_ratios=[1, 0.95], width_ratios=[1] * 7 + [0.75], hspace=0.32, wspace=0.08)
-    # (A) the measured half's cells in situ: non-tumor first, then tumor without a readout, traced cells on top
+    # (A) the cells of the measured half in situ, with the non-tumor cells first, then the tumor cells without a readout and the traced cells on top
     lab = ins["label"].astype(str); is_clone = np.isin(lab, clones); is_non = ~is_clone & (lab != CANCER)
     cc = np.array([col[l] if c else (col["nontumor"] if n else col["notrace"]) for l, c, n in zip(lab, is_clone, is_non)], dtype=object)
     order = np.argsort(np.where(is_non, 0, np.where(is_clone, 2, 1)), kind="stable")
     pad = 1.6 * PITCH / 2; ext = (xy[:, 0].min() - pad, xy[:, 0].max() + pad, xy[:, 1].min() - pad, xy[:, 1].max() + pad)
     ax = fig.add_subplot(gs[0, 0]); panels.append((ax, "A")); cells(ax, ins["xy"].astype(float)[order], list(cc[order]), "In situ cells", size=1.2, fontsize=11, extent=ext)
     seen = {"nontumor", "notrace"} | set(lab[is_clone].tolist())
-    # (B-G) truth and each method's map
+    # (B-G) the truth and the map of each method
     for j, (title, comp) in enumerate([("Synthetic Visium", truth)] + maps):
         ax = fig.add_subplot(gs[0, j + 1]); panels.append((ax, "BCDEFG"[j]))
         if comp is None:
@@ -100,7 +102,7 @@ def main(section="M3-4"):
             ax.scatter(x + np.random.default_rng(0).uniform(-0.15, 0.15, len(vals)), vals, s=12, color=c, zorder=3)
         ax.set_xticks(range(len(METHODS)), [m for m, _, _ in METHODS], rotation=35, ha="right"); ax.set_title(title, fontsize=11)
         ax.grid(color=GRID, axis="y"); ax.set_axisbelow(True); [ax.spines[s].set_visible(False) for s in ("top", "right")]
-    # legend: the clades, then the other colours shown
+    # legend with the clades, then the other colors shown
     lax = fig.add_subplot(gs[0, 7]); lax.axis("off")
     for k in [k for k in clones + ["nontumor", "notrace"] if k in seen]:
         lax.scatter([], [], c=col[k], s=40, marker="s", label=names[k])

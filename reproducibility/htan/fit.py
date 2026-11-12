@@ -1,16 +1,17 @@
-"""SpOTr and cell2location on HT260C1 (environment benchmark_env, GPU; cell2location runs in its own environment through common/c2l.py).
+"""SpOTr and cell2location on HT260C1 (environment benchmark_env, GPU, with cell2location in its own environment through common/c2l.py).
 
-Labels: every nucleus's cell type, every cancer nucleus's clone (A, B1, B2).  Every cancer nucleus has a clone, so the deconvolution has no
-type for cancer cells without one.  B1's sub-lineages are not given to any method.
+The labels are the cell type of every nucleus and the clone of every cancer nucleus (A, B1 or B2). Every cancer nucleus has a clone, so the
+deconvolution has no reference type for cancer cells without a clone. No method is given the sub-lineages of B1.
 
-SpOTr, with the Methods' settings: signatures from cell2location's regression model on these labels and every fitted gene; the reference cell
-types those with more than one nucleus; the tree: Ward linkage within each clone on the nuclei's copy-number distances, scaled so that its
-deepest split equals the shallowest distance between clones, the clones joined by their mean distances (copynumber.clone_tree); beta 1/2.
-Two fits: alpha 0.2 (Fig. 4, Fig. S3) and alpha 0, the expression alone (Fig. S3).
-cell2location: the package with its documented workflow on the same labels, 10 cells per spot, 30,000 epochs.
+SpOTr runs with the settings of the Methods. Its signatures come from the regression model of cell2location on these labels and every fitted
+gene, and its reference cell types are those with more than one nucleus. The tree is a Ward linkage within each clone on the copy number
+distances between the nuclei, scaled so that its deepest split equals the shallowest distance between clones, with the clones joined by their
+mean distances (copynumber.clone_tree), and beta is 1/2. We fit SpOTr at alpha 0.2 (Figs. 4 and S3) and at alpha 0, which maps the nuclei by
+expression alone (Fig. S3).
+cell2location is the package with its documented workflow on the same labels, with 10 cells per spot and 30,000 epochs.
 
-Writes to $SPOTR_RESULTS/htan/: spotr_alpha0.2.npz and spotr_alpha0.0.npz (phi: the map, nuclei x spots; proportions: spots x labels; labels),
-c2l.npz (cell2location's abundances, spots x labels; types), c2l_signatures.npz.
+Writes to $SPOTR_RESULTS/htan/ spotr_alpha0.2.npz and spotr_alpha0.0.npz (the map phi as nuclei x spots, the proportions as spots x labels, and
+the labels), c2l.npz (the abundances of cell2location as spots x labels, and the types) and c2l_signatures.npz.
 
 Usage: python fit.py [spotr] [c2l]
 """
@@ -35,7 +36,7 @@ def data():
 
 
 def tree(sc_):
-    """the tree SpOTr is given, as a DataFrame of distances between the cancer nuclei"""
+    """Return the tree that SpOTr is given, as a DataFrame of distances between the cancer nuclei."""
     m = sc_.obs["clone"].notna().to_numpy(); names = sc_.obs_names[m]; cl = sc_.obs["clone"][m].astype(str).to_numpy()
     k = np.array([sorted(set(cl)).index(c) for c in cl]); d = cn.profile_distances(sc_.obsm["cn_profile"][m])
     return pd.DataFrame(cn.clone_tree(d, k), index=names, columns=names)

@@ -1,41 +1,46 @@
-"""SpOTr's engine: a joint fit of a spot deconvolution model and an entropic Fused Gromov-Wasserstein map of the dissociated cancer cells.
+"""The engine of SpOTr, which fits a spot deconvolution model jointly with an entropic Fused Gromov-Wasserstein map of the dissociated cancer cells.
 
-The spots follow the negative binomial model of cell2location, in which the expected counts of each spot sum reference signatures weighted by
-their abundances; the cancer part of each spot is the sum of the clone signatures of the cells mapped to it.  The map minimises
+The spots follow the negative binomial model of cell2location, in which the expected counts of each spot are a sum of reference signatures
+weighted by their abundances, and the cancer part of each spot is the sum of the clone signatures of the cells mapped to it. The map minimizes
 
     F(theta, gamma) = -log p(Y | theta, gamma) - log p(theta) + beta <C^F, gamma> + alpha S(gamma) + <gamma, log gamma>
 
-over maps that place each cancer cell exactly once and give each spot a number of cancer cells proportional to its cancer share.  C^F is the
-cosine distance between each cell's and each spot's cancer part in log-normalised expression, and S the structural term: distance matching
-between tree distances and spot distances, or, with clone labels only, the spread of each clone over the spots.  The strengths of the
-expression cost and of the structural term are set against the likelihood at the start of the fit (beta / (1 - beta) and
-alpha / (1 - alpha) times the likelihood's spread).  The map is updated by generalised conditional gradient, with the linearised objective
-solved by Sinkhorn in the log domain, in alternation with Adam steps on the deconvolution's parameters.  Supplementary Note 1 of the paper
-derives the linearised structural term.
+over the maps that place each cancer cell exactly once and give each spot a number of cancer cells proportional to the cancer proportion of the
+spot. C^F is the cosine distance between the log-normalized expression of each cell and of the cancer part of each spot, and S is the structural
+term. S compares the tree distances with the spot distances, or penalizes the spread of each clone over the spots when only clone labels are
+given. We set the strengths of the expression cost and of the structural term against the likelihood at the start of the fit, to beta /
+(1 - beta) and alpha / (1 - alpha) times the spread of the likelihood. We update the map by generalized conditional gradient, with the linearized
+objective solved by Sinkhorn iterations in the log domain, in alternation with Adam steps on the parameters of the deconvolution. Supplementary
+Note 1 of the paper contains the derivation of the linearized structural term.
 """
 import numpy as np
 
-N_OUTER, J, IT0, IT1, ADAM0, ADAM1 = 16, 12, 300, 100, 1000, 200                                # rounds; map updates, Sinkhorn sweeps and Adam steps
-ETAS = [1.0, 0.5, 0.25, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0]                                     # the map's step sizes
-SINK_TOL, SINK_MAX = 1e-4, 5000                                                                  # Sinkhorn: rows to within 1e-4, at most 5,000 sweeps
+N_OUTER, J, IT0, IT1, ADAM0, ADAM1 = 16, 12, 300, 100, 1000, 200                                # rounds, map updates per round, Sinkhorn sweeps and Adam steps
+ETAS = [1.0, 0.5, 0.25, 0.1, 0.03, 0.01, 0.003, 0.001, 0.0]                                     # step sizes of the map
+SINK_TOL, SINK_MAX = 1e-4, 5000                                                                  # Sinkhorn until the rows sum to 1 within 1e-4, at most 5,000 sweeps
 
 
 def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tree_d=None, omega=None, verbose=False):
     """Fit the deconvolution and the map jointly.
 
-    Y           spots x genes counts.
-    G_ref       reference types x genes signatures of the microenvironment.
-    g_untraced  1 x genes signature of the cancer cells without a clone (a reference type of its own), or None when every cancer cell
-                is mapped.
-    X_sig       mapped cells x genes: each mapped cell's clone signature.
-    X_cells     mapped cells x genes: each mapped cell's own counts (for the expression cost).
-    xy          spots x 2 positions.
-    clone       each mapped cell's clone (0 .. K - 1).
-    alpha       structural importance in [0, 1); beta the expression cost's weight in [0, 1).
-    tree_d      mapped cells x mapped cells tree distances (distance matching), or None (clone labels: each clone drawn together).
-    omega       optional {clone: weight} on the structural term (0: that clone mapped by expression alone).
-    Returns dict(phi: cells x spots map, th: the deconvolution's parameters, costs: the unweighted expression and structural costs of the
-    final map, trace: per round log-likelihood and steps).
+    Args:
+        Y: Counts of the spots (spots x genes).
+        G_ref: Signatures of the reference types of the microenvironment (types x genes).
+        g_untraced: Signature of the cancer cells without a clone (1 x genes), which form a reference type of their own, or None when every
+            cancer cell is mapped.
+        X_sig: Clone signature of each mapped cell (mapped cells x genes).
+        X_cells: Counts of each mapped cell (mapped cells x genes), for the expression cost.
+        xy: Positions of the spots (spots x 2).
+        clone: Clone of each mapped cell (0 .. K - 1).
+        alpha: Importance of the structural term in [0, 1).
+        beta: Importance of the expression cost in [0, 1).
+        tree_d: Tree distances between the mapped cells (mapped cells x mapped cells), or None to use the clone labels alone.
+        omega: Optional weights {clone: weight} on the structural term. A clone with weight 0 is mapped by its expression alone.
+        verbose: Print the log-likelihood after each round.
+
+    Returns:
+        A dict with the map phi (cells x spots), the parameters th of the deconvolution, the unweighted expression and structural costs of the
+        final map (costs), and the log-likelihood and step sizes of each round (trace).
     """
     import jax, jax.numpy as jnp, optax
     from functools import partial
@@ -43,7 +48,7 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
     from scipy.spatial.distance import pdist, squareform
     Y, xy, clone = np.asarray(Y, float), np.asarray(xy, float), np.asarray(clone, int)
     Gme = np.asarray(G_ref, float).reshape(-1, Y.shape[1])
-    if g_untraced is not None:                                                                  # untraced cancer cells: a type of their own
+    if g_untraced is not None:                                                                  # the untraced cancer cells as a reference type of their own
         Gme = np.vstack([Gme, np.asarray(g_untraced, float).reshape(1, -1)])
     D = squareform(pdist(xy)); S, G = Y.shape; E = Gme.shape[0]; n = np.asarray(X_sig).shape[0]
     f32 = lambda a: jnp.asarray(np.asarray(a, np.float32))
@@ -52,11 +57,11 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
     th = dict(logN=f32(np.full(S, np.log(10.0))), z=f32(np.zeros((S, E + 1))), logm=f32(np.zeros(G)), logy=f32(np.zeros(S)),
               logs=f32(np.full(G, np.log(1e-3 * mc))), logr=f32(np.full(G, np.log(10.0))))
 
-    def parts(th):                                                                              # abundances: reference types, cancer cells
+    def parts(th):                                                                              # abundances of the reference types and of the cancer cells
         w = jnp.exp(th["logN"])[:, None] * jax.nn.softmax(th["z"], axis=1); return w[:, :E], w[:, E:]
 
-    def caps_of(th):                                                                            # each spot's number of mapped cells: its cancer share,
-        wt = parts(th)[1] / jnp.exp(th["logN"])[:, None]                                        # floored at a millionth of the mean
+    def caps_of(th):                                                                            # number of mapped cells in each spot, proportional to the
+        wt = parts(th)[1] / jnp.exp(th["logN"])[:, None]                                        # cancer proportion of the spot and at least a millionth of the mean
         c = (wt / wt.sum(0, keepdims=True) * float(n)).T
         c = jnp.maximum(c, 1e-6 * float(n) / S); return c * (float(n) / c.sum(1))[:, None]
 
@@ -69,7 +74,7 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
         mu = mu_of(th, phi, caps); r = jnp.exp(th["logr"])[None, :]
         return jnp.sum(gammaln(Yj + r) - gammaln(r) - gammaln(Yj + 1.0) + r * jnp.log(r / (r + mu)) + Yj * jnp.log(mu / (r + mu) + 1e-30))
 
-    def logprior(th):                                                                           # cell2location's priors
+    def logprior(th):                                                                           # the priors of cell2location
         return (jnp.sum(9.0 * th["logN"] - jnp.exp(th["logN"])) + jnp.sum(19.0 * th["logy"] - 20.0 * jnp.exp(th["logy"])) - 0.5 * jnp.sum(th["logm"] ** 2)
                 - jnp.sum((th["logs"] - np.log(1e-3 * mc)) ** 2) / 8.0 - jnp.sum((th["logr"] - np.log(10.0)) ** 2) / 8.0)
 
@@ -83,7 +88,7 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
         (th, st), _ = jax.lax.scan(body, (th, st), None, length=steps); return th, st
 
     def sink(Cst, logcap, f, g, iters):
-        """log-domain Sinkhorn: at least `iters` sweeps, then on until every row sums to 1 within SINK_TOL"""
+        """Run log-domain Sinkhorn for at least `iters` sweeps, then until every row sums to 1 within SINK_TOL."""
         def body(_, s):
             f, g = s; f = -logsumexp(g[0] - Cst, axis=1); g = jnp.stack([logcap[0] - logsumexp(f[:, None] - Cst, axis=0)]); return (f, g)
         def err(f, g):
@@ -93,19 +98,21 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
             f, g, k = s; f, g = jax.lax.fori_loop(0, 10, body, (f, g)); return (f, g, k + 10)
         f, g, _ = jax.lax.while_loop(lambda s: (s[2] < SINK_MAX) & (err(s[0], s[1]) > SINK_TOL), more, (f, g, iters)); return f, g
 
-    def pD2(p):                                                                                 # p (C^S)^2 from the spots' coordinates
+    def pD2(p):                                                                                 # p (C^S)^2 from the coordinates of the spots
         return (p @ sqj)[:, None] + p.sum(1)[:, None] * sqj[None, :] - 2.0 * (p @ Lj) @ Lj.T
 
     @jax.jit
     def gcg(phi, f, g, th, caps, W1, W2, rr, Mb):
-        """J conditional gradient steps of the map: the linearised objective solved by Sinkhorn, the step chosen on the exact objective"""
+        """Take J conditional gradient steps of the map, solving the linearized objective by Sinkhorn and choosing each step size on the exact
+        objective.
+        """
         logcap = jnp.log(jnp.maximum(caps, 1e-30))
         def step(c, _):
             phi, f, g = c; Lt = 2.0 * rr[:, None] + 2.0 * (W1 @ pD2(phi)) - 4.0 * (W2 @ (phi @ Dj)) + Mb
             Cst = -1.0 * jax.grad(lambda p: loglik(th, p, caps))(phi) + Lt; f, g = sink(Cst, logcap, f, g, IT1); dl = jnp.exp(f[:, None] + g[0] - Cst) - phi
             q1 = jnp.sum(dl * Lt); q2 = jnp.sum(dl * (W1 @ pD2(dl))) - 2.0 * jnp.sum(dl * (W2 @ (dl @ Dj)))
             mu0 = mu_of(th, phi, caps); dmu = mu_of(th, phi + dl, caps) - mu0; r = jnp.exp(th["logr"])[None, :]   # spot means are affine in the map
-            def dobj(e):                                                                        # the objective's change for a step e
+            def dobj(e):                                                                        # change of the objective for a step e
                 dll = jnp.sum(Yj * jnp.log1p(e * dmu / mu0) - (Yj + r) * jnp.log1p(e * dmu / (r + mu0)))
                 pe = jnp.maximum(phi + e * dl, 1e-30); p0 = jnp.maximum(phi, 1e-30)
                 return -dll + e * q1 + e * e * q2 + jnp.sum(pe * jnp.log(pe) - p0 * jnp.log(p0))
@@ -113,14 +120,14 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
             return (phi + e * dl, f, g), jnp.stack([vals.min(), e, vals[-1] - vals.min()])
         (phi, f, g), tr = jax.lax.scan(step, (phi, f, g), None, length=J); return phi, f, g, tr
 
-    # start: the capacities' uniform map, then Adam on the deconvolution
+    # start from the uniform map under the capacities, then take Adam steps on the deconvolution
     caps = caps_of(th); f, g = jnp.zeros(n, jnp.float32), jnp.zeros((1, S), jnp.float32)
     f, g = sink(jnp.zeros((n, S), jnp.float32), jnp.log(caps), f, g, IT0); phi = jnp.exp(f[:, None] + g[0]); th, st = adam(th, st, phi, caps, ADAM0)
-    dcs = lambda C: float((C - C.mean(1, keepdims=True) - C.mean(0, keepdims=True) + C.mean()).std())   # spread of a double-centred cost
-    # the structural term: pair weights U and target distances Tg, its strength set against the likelihood's spread
+    dcs = lambda C: float((C - C.mean(1, keepdims=True) - C.mean(0, keepdims=True) + C.mean()).std())   # spread of a double-centered cost
+    # the structural term, with pair weights U and target distances Tg, and its strength set against the spread of the likelihood
     if tree_d is not None:
         U = np.ones((n, n)); dd = np.asarray(tree_d, float); iu = np.triu_indices(n, 1)
-        Tg = float(D[np.triu_indices(S, 1)].mean() / max(dd[iu].mean(), 1e-12)) * dd             # tree distances rescaled to the spots' mean distance
+        Tg = float(D[np.triu_indices(S, 1)].mean() / max(dd[iu].mean(), 1e-12)) * dd             # tree distances rescaled to the mean distance between spots
     else:
         U = (clone[:, None] == clone[None, :]).astype(float); Tg = np.zeros((n, n))
     np.fill_diagonal(U, 0.0); U = U / max(U.sum(), 1e-30) * n; W2u = U * Tg; rru = (W2u * Tg).sum(1)
@@ -130,7 +137,7 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
     if omega is not None:                                                                       # clade weights, after the calibration
         om = np.array([float(omega.get(int(k), 1.0)) for k in clone]); U = U * np.outer(om, om); W2u = U * Tg; rru = (W2u * Tg).sum(1)
     W1, W2, rr = f32(lam * U), f32(lam * W2u), f32(lam * rru)
-    # the expression cost: cosine distance between each cell and each spot's cancer part, in log-normalised expression
+    # the expression cost, the cosine distance between the log-normalized expression of each cell and of the cancer part of each spot
     Xn = np.asarray(X_cells, float); Lc = f32(np.log1p(Xn / np.maximum(Xn.sum(1, keepdims=True), 1.0) * 1e4)); Lcn = Lc / jnp.maximum(jnp.sqrt(jnp.sum(Lc ** 2, 1)), 1e-12)[:, None]
 
     def M_of(t):
@@ -153,5 +160,5 @@ def fit(Y, G_ref, g_untraced, X_sig, X_cells, xy, clone, alpha=0.2, beta=0.5, tr
 
 
 def abund(th):
-    """each spot's abundances: the reference types, the untraced cancer cells (when fitted), the mapped cancer cells"""
+    """Return the abundances of the reference types, the untraced cancer cells (when fitted) and the mapped cancer cells in each spot."""
     z = np.asarray(th["z"], float); e = np.exp(z - z.max(1, keepdims=True)); return (np.exp(np.asarray(th["logN"], float))[:, None] * e / e.sum(1, keepdims=True)).astype(np.float32)

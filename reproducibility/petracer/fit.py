@@ -1,21 +1,22 @@
-"""SpOTr and the compared methods on the PEtracer problem that prepare.py writes; each method's estimate of every spot's composition.
+"""SpOTr and the compared methods on the PEtracer problem that prepare.py writes, each estimating the composition of every spot.
 
-Every dissociated cell has one label: its clone when it has one, otherwise its cell type (the malignant cells without a lineage readout under
-"Malignant").
-  spotr          SpOTr (spotr.SpOTr) with the lineage tree, alpha 0.2 and beta 1/2; reference signatures from cell2location's regression
-                 model on the labelled dissociated cells (common.c2l.signatures), the malignant cells without a clone as a reference type
-                 of their own.  The spots' proportions of every reference type and clone (get_proportions), and the map.
-  cell2location  the package (common.c2l.deconvolve), every label a reference type, N_cells_per_location the mean number of cells per spot,
-                 30,000 epochs; each label's abundance.
-  destvi         scvi-tools' CondSCVI and DestVI (common.baselines.destvi), every label a reference type; each label's proportion.
-  tangram        Tangram's cell mapping of every dissociated cell (common.baselines.tangram, 1,000 epochs, the spots' true numbers of cells as
-                 its density prior); each spot's mapped cells per label.
-  scdot          scDOT (common.baselines.scdot) with every label as a cell type; its map's mapped cells per label.
+Every dissociated cell has one label, which is its clone when it has one and otherwise its cell type, with the malignant cells without a lineage
+readout labeled "Malignant".
+  spotr          SpOTr (spotr.SpOTr) with the lineage tree, alpha 0.2 and beta 1/2, and reference signatures from the regression model of
+                 cell2location on the labeled dissociated cells (common.c2l.signatures), with the malignant cells without a clone as a reference
+                 type of their own. Writes the proportions of every reference type and clone in each spot (get_proportions) and the map.
+  cell2location  The package (common.c2l.deconvolve), with every label as a reference type, N_cells_per_location the mean number of cells per
+                 spot and 30,000 epochs. Writes the abundance of each label.
+  destvi         CondSCVI and DestVI of scvi-tools (common.baselines.destvi), with every label as a reference type. Writes the proportion of each
+                 label.
+  tangram        The cell mapping of Tangram for every dissociated cell (common.baselines.tangram, 1,000 epochs), with the true numbers of cells
+                 in the spots as its density prior. Writes the mapped cells of each label in each spot.
+  scdot          scDOT (common.baselines.scdot) with every label as a cell type. Writes the mapped cells of each label in each spot.
 
-Writes $SPOTR_RESULTS/petracer/<section>/<method>.npz: comp (spots x labels) and labels; for SpOTr also the map (cells x spots, float16)
-and the costs of the mapping.  A method whose file exists is not refitted.
+Writes $SPOTR_RESULTS/petracer/<section>/<method>.npz with comp (spots x labels) and labels, and for SpOTr also the map (cells x spots, float16)
+and the costs of the mapping. A method whose file exists is not fitted again.
 
-Usage: python fit.py [section=M3-4] [spotr] [cell2location] [destvi] [tangram] [scdot]   (environment benchmark_env, GPU; cell2location in
+Usage: python fit.py [section=M3-4] [spotr] [cell2location] [destvi] [tangram] [scdot]   (environment benchmark_env, GPU, with cell2location in
 its own environment, see common/paths.py)
 """
 import os
@@ -40,7 +41,7 @@ def load(section):
 
 
 def labels_of(sc):
-    """each dissociated cell's label: its clone, else its cell type"""
+    """Return the label of each dissociated cell, which is its clone or otherwise its cell type."""
     cl = sc.obs["clone"].astype(object); return np.where(cl.notna(), cl.astype(str), sc.obs["cell_type"].astype(str)).astype(str)
 
 
@@ -53,7 +54,7 @@ def onehot(lab):
 
 
 def spotr_model(sc, st, sig):
-    """SpOTr set up on the dissociated cells with the lineage tree and the given signatures (DataFrame genes x labels)"""
+    """Return SpOTr set up on the dissociated cells with the lineage tree and the given signatures (a DataFrame of genes x labels)."""
     import spotr
     spotr.SpOTr.setup_anndata(sc, labels_key="cell_type", clone_key="clone", tree=sc.uns["tree"])
     return spotr.SpOTr(sc, st, spatial_key="spatial", signatures=sig)

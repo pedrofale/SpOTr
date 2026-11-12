@@ -6,7 +6,9 @@
 [![pypi](https://img.shields.io/pypi/v/phylospatial-spotr.svg?style=flat)](https://pypi.org/project/phylospatial-spotr/)
 [![CI](https://github.com/pedrofale/spotr/actions/workflows/tests.yml/badge.svg)](https://github.com/pedrofale/spotr/actions/workflows/tests.yml)
 
-Phylospatial optimal transport for single-cell and spatial transcriptomics data integration. SpOTr maps dissociated cancer cells to the spots of spatial transcriptomics data, using the concordance between the evolutionary tree of the cells and their spatial distribution. It combines the spot deconvolution model of cell2location with Fused Gromov–Wasserstein optimal transport: the tree draws related cells to nearby spots, and the deconvolution determines how many cancer cells each spot holds. SpOTr recovers the spatial locations of clones that are hard to distinguish by their expression, places sub-lineages that no reference signature describes, and draws the phylogeny of a tumor in the tissue. When no tree is available, it can use clone labels alone.
+Phylospatial optimal transport for single-cell and spatial transcriptomics data integration.
+
+SpOTr maps dissociated cancer cells to the spots of spatial transcriptomics data by using the concordance between the evolutionary tree of the cells and their spatial locations. It combines the spot deconvolution model of cell2location with Fused Gromov–Wasserstein optimal transport, so that closely related cells are mapped to nearby spots and the number of cancer cells mapped to each spot follows the deconvolution. SpOTr recovers the spatial locations of clones that are hard to distinguish by their expression, places sub-lineages that are not given as labels, and positions the clades of the tree in the tissue. It can also use clone labels in place of a tree.
 
 ## Installation
 
@@ -15,21 +17,21 @@ pip install phylospatial-spotr
 ```
 
 The package is named `phylospatial-spotr` on PyPI, where `spotr` is an unrelated project, and is imported as `spotr`.
-Optional extras: `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures), as in `pip install "phylospatial-spotr[plot]"`.
-The development version installs with `pip install git+https://github.com/pedrofale/spotr.git`.
+The optional extras are `[tree]` (networkx, to read trees as graphs), `[plot]` (scanpy and squidpy, for the notebook) and `[c2l]` (cell2location, for its reference signatures), installed as in `pip install "phylospatial-spotr[plot]"`.
+To install the development version, run `pip install git+https://github.com/pedrofale/spotr.git`.
 
 ## Quick start
 
-SpOTr follows the interface of scvi-tools models such as DestVI. The dissociated cells (raw counts) carry each cell's type and each cancer cell's clone; a tree over the cancer cells is optional, as a Newick string, a networkx graph, a TreeData object or an `.obsp` matrix of tree distances. The spots carry raw counts and their positions.
+SpOTr follows the interface of scvi-tools models such as DestVI. The AnnData of the dissociated cells contains their raw counts, the cell type of every cell and the clone of each cancer cell. A tree over the cancer cells is optional, and can be given as a Newick string, a networkx graph, a TreeData object, a DataFrame of tree distances or an `.obsp` matrix of tree distances. The AnnData of the spots contains their raw counts and positions.
 
 ```python
 import spotr
 
 spotr.SpOTr.setup_anndata(
     sc_adata,
-    labels_key="cell_type",   # every cell's type
-    clone_key="clone",        # each cancer cell's clone (NaN for the other cells)
-    tree=newick,              # optional: leaves named by sc_adata.obs_names
+    labels_key="cell_type",   # the cell type of every cell
+    clone_key="clone",        # the clone of each cancer cell (NaN for the other cells)
+    tree=newick,              # optional, with leaves named by sc_adata.obs_names
 )
 model = spotr.SpOTr(sc_adata, st_adata, spatial_key="spatial")
 model.train(alpha=0.2)
@@ -40,15 +42,15 @@ model.get_cell_locations()    # cancer cells x 2, also in sc_adata.obsm["spotr_s
 model.choose_alpha([0, 0.1, 0.2, 0.4, 0.95])   # the elbow of the expression and structural costs
 ```
 
-Without a tree, SpOTr draws the cells of each clone together. `model.train(clade_weights={"clone 3": 0.0})` maps a clone known to be dispersed through the tissue by its expression alone.
+SpOTr maps the cells of each clone close together when no tree is given. To map a clone known to be dispersed through the tissue by its expression alone, set its weight in the structural term to zero, as in `model.train(clade_weights={"clone 3": 0.0})`.
 
 ## Example
 
-[`notebooks/spotr_toy_example.ipynb`](https://github.com/pedrofale/spotr/blob/main/notebooks/spotr_toy_example.ipynb) runs SpOTr on a toy tumor (`spotr.datasets.toy_tumor()`) whose clones are hard to distinguish by their expression but each hold their own territory, and compares it with SpOTr without the tree.
+We run SpOTr on a toy tumor (`spotr.datasets.toy_tumor()`) in [`notebooks/spotr_toy_example.ipynb`](https://github.com/pedrofale/spotr/blob/main/notebooks/spotr_toy_example.ipynb). The clones of the toy tumor are hard to distinguish by their expression but occupy separate territories, and we compare SpOTr with and without the tree.
 
 ## Reproducibility
 
-The simulation benchmark, the analyses of the PEtracer and HTAN data, and every figure of the paper are in [`reproducibility/`](https://github.com/pedrofale/spotr/tree/main/reproducibility).
+The code for the simulation benchmark, the analyses of the PEtracer and HTAN data and every figure of the paper is in [`reproducibility/`](https://github.com/pedrofale/spotr/tree/main/reproducibility).
 
 ## Citation
 

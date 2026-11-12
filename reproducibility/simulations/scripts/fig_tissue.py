@@ -1,9 +1,9 @@
-"""Fig. S2 (fig_sim_tissue): the example tumor in space (environment benchmark_env; CPU).
+"""Fig. S2 (fig_sim_tissue), the example tumor in space (environment benchmark_env, CPU).
 
-(A) Every cell of the section: the tumor cells by clone, the non-tumor cells by type.  (B) A window of the measured half across the tumor's
-edge, with the 55 um Visium spots over its cells.
+(A) Every cell of the section, with the tumor cells colored by clone and the non-tumor cells by type. (B) A window of the measured half across
+the edge of the tumor, with the 55 um Visium spots over its cells.
 
-Usage: python fig_tissue.py   (reads config.yaml and its results; writes to common.paths.FIGURES)
+Usage: python fig_tissue.py   (reads config.yaml and its results, and writes to common.paths.FIGURES)
 """
 import sys
 from pathlib import Path

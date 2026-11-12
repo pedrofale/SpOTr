@@ -1,16 +1,17 @@
-"""cell2location, the package, with its documented workflow.  The models run in their own environment (c2l); the functions below write their
-inputs to a file, run this script there, and read its outputs back.
+"""cell2location, the package, with its documented workflow. The models run in their own environment (c2l). The functions below write their inputs
+to a file, run this script in that environment, and read its outputs back.
 
-signatures(X, labels, path)     reference signatures: RegressionModel on the labelled dissociated cells (250 epochs), on every gene given;
-                                each label's posterior mean expression (means_per_cluster_mu_fg), labels x genes.  SpOTr's deconvolution
-                                uses them on every gene it fits.
-deconvolve(Xc, labels, Y, n_cells, path, epochs)
-                                cell2location as a method of its own: genes by filter_genes (cell_count_cutoff 5, cell_percentage_cutoff2
-                                0.03, nonz_mean_cutoff 1.12); signatures by RegressionModel (250 epochs); Cell2location with
-                                N_cells_per_location n_cells and detection_alpha 20, trained on the whole data for `epochs` epochs; each
-                                label's posterior mean abundance per spot (means_cell_abundance_w_sf), spots x labels.
+    signatures(X, labels, path)     Reference signatures from RegressionModel on the labeled dissociated cells (250 epochs), on every gene given.
+                                    Returns the posterior mean expression of each label (means_per_cluster_mu_fg), labels x genes. SpOTr uses
+                                    them in its deconvolution on every gene it fits.
+    deconvolve(Xc, labels, Y, n_cells, path, epochs)
+                                    cell2location as a method of its own, with genes from filter_genes (cell_count_cutoff 5,
+                                    cell_percentage_cutoff2 0.03, nonz_mean_cutoff 1.12), signatures from RegressionModel (250 epochs), and
+                                    Cell2location with N_cells_per_location n_cells and detection_alpha 20, trained on the whole data for
+                                    `epochs` epochs. Returns the posterior mean abundance of each label in each spot (means_cell_abundance_w_sf),
+                                    spots x labels.
 
-Both are cached: an existing output file is read, not refitted.
+Both functions cache their outputs, and read an existing output file instead of fitting again.
 
 Usage (in the c2l environment): python c2l.py signatures|deconvolve <in.npz> <out.npz>
 """
@@ -34,13 +35,13 @@ def _run(stage, inputs, path):
 
 
 def signatures(X, labels, path):
-    """{label: signature over the genes of X}"""
+    """Return {label: signature over the genes of X}."""
     z = _run("signatures", dict(X=np.asarray(X, np.float32), labels=np.asarray(labels).astype(str)), path)
     return dict(zip([str(l) for l in z["labels"]], np.asarray(z["signatures"], float)))
 
 
 def deconvolve(Xc, labels, Y, n_cells, path, epochs=30000):
-    """(spots x labels abundances, labels)"""
+    """Return the abundances (spots x labels) and the labels."""
     z = _run("deconvolve", dict(Xc=np.asarray(Xc, np.float32), labels=np.asarray(labels).astype(str), Y=np.asarray(Y, np.float32),
                                 n_cells=float(n_cells), epochs=int(epochs)), path)
     return np.asarray(z["w"], float), [str(t) for t in z["types"]]

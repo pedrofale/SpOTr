@@ -1,5 +1,6 @@
-"""The quick start of the README on the toy tumour: SpOTr runs with and without the tree, its outputs are valid, and the tree improves
-the clones' proportions in the spots."""
+"""Tests of the quick start of the README on the toy tumor. We check that SpOTr runs with and without the tree, that its outputs are valid, and that
+the proportions of the clones in the spots are more accurate with the tree.
+"""
 import numpy as np
 import pytest
 
@@ -14,8 +15,9 @@ def toy():
 
 
 def per_clone_r(props, truth):
-    """the mean over clones of the Pearson correlation between each clone's true and estimated share of the tumour cells, over the spots
-    that hold tumour cells (as in notebooks/spotr_toy_example.ipynb)"""
+    """Return the mean over clones of the Pearson correlation between the true and estimated proportions of each clone among the tumor cells, over
+    the spots that contain tumor cells (as in notebooks/spotr_toy_example.ipynb).
+    """
     T = truth["clone_counts"]; clones = [c for c in T.columns if c.startswith("clone")]
     true = T[clones].div(T[clones + ["smaller clones"]].sum(axis=1).clip(lower=1), axis=0)
     est = props[clones].div(props[clones].sum(axis=1).clip(lower=1e-12), axis=0)

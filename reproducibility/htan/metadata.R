@@ -1,6 +1,6 @@
 # The authors' annotations of HT260C1, from their Seurat objects (read without Seurat, through the meta.data slot):
-#   the nuclei's cell types (HT260C1-Th1K1.rds)                       -> HT260C1_sn_meta.tsv
-#   the spots' tumour purity (HT260C1-Th1K1Fc2U1Z1Bs1-SeuratObj.rds)    -> HT260C1-Th1K1Fc2U1Z1Bs1_st_meta.tsv
+#   the cell types of the nuclei (HT260C1-Th1K1.rds)                  -> HT260C1_sn_meta.tsv
+#   the tumor purity of the spots (HT260C1-Th1K1Fc2U1Z1Bs1-SeuratObj.rds) -> HT260C1-Th1K1Fc2U1Z1Bs1_st_meta.tsv
 # Usage: Rscript metadata.R <folder with the downloaded files>
 args <- commandArgs(trailingOnly = TRUE); d <- args[1]
 meta <- function(rds) suppressWarnings(readRDS(file.path(d, rds))@meta.data)

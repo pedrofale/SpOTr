@@ -1,16 +1,18 @@
-"""The other methods on one simulated tumor (environment benchmark_env; cell2location runs in its own environment through common/c2l.py).
+"""The other methods on one simulated tumor (environment benchmark_env, with cell2location in its own environment through common/c2l.py).
 
-The methods that take labelled dissociated cells (cell2location, DestVI, scDOT) get world.labels: each non-tumor type, each clone (the smaller
-clades pooled as one label) and the tumor cells without a lineage readout as one label.
+The methods that take labeled dissociated cells (cell2location, DestVI and scDOT) get world.labels, with one label for each non-tumor type, one
+for each clone (with the smaller clades pooled as one label) and one for the tumor cells without a lineage readout.
 
-  c2l       cell2location (common/c2l.py, deconvolve; N_cells_per_location the mean number of cells per spot): each label's abundance per spot
-  destvi    DestVI (common/baselines.py): each label's proportion per spot
-  scdot     scDOT: its map of the dissociated cells
-  tangram   Tangram in mode "cells", the spots' true numbers of cells as its density prior
-  exact_ot  exact optimal transport under the cosine distance between log-normalised profiles, the spots' true numbers of cells as their masses
-  fgw       fused Gromov-Wasserstein (POT, square loss, alpha 0.5) of the traced cells against the spots: the feature cost the cosine distance
-            between log-normalised profiles, the structures the tree distances and the spots' Euclidean distances, each divided by its maximum,
-            uniform masses; the rows of the other cells zero
+  c2l       cell2location (common/c2l.py, deconvolve), with N_cells_per_location the mean number of cells per spot. Writes the abundance of each
+            label in each spot.
+  destvi    DestVI (common/baselines.py). Writes the proportion of each label in each spot.
+  scdot     scDOT. Writes its map of the dissociated cells.
+  tangram   Tangram in mode "cells", with the true numbers of cells in the spots as its density prior.
+  exact_ot  Exact optimal transport under the cosine distance between log-normalized profiles, with the true numbers of cells in the spots as
+            their masses.
+  fgw       Fused Gromov-Wasserstein (POT, square loss, alpha 0.5) of the traced cells against the spots. The feature cost is the cosine distance
+            between log-normalized profiles, the structures are the tree distances and the Euclidean distances between spots, each divided by its
+            maximum, and the masses are uniform. The rows of the other cells are zero.
 
 Writes w and types (abundances or proportions, spots x labels) for c2l and DestVI, and P (dissociated cells x spots) for the maps.
 

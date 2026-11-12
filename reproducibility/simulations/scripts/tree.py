@@ -1,7 +1,8 @@
-"""The tree given to SpOTr (environment benchmark_env; numpy only): the true tree's distances (sums of branch lengths in time) between the
-traced dissociated cells, and their true clones, the pooled smaller clades as -1.
+"""The tree given to SpOTr (environment benchmark_env, numpy only), as the distances of the true tree (sums of branch lengths in time) between the
+traced dissociated cells, with their true clones and the pooled smaller clades as -1.
 
-Writes trees.npz: rows (the traced cells' rows in problem.npz), D_true (their distances), clone_true_tree, K (the number of clones, not pooled).
+Writes trees.npz with rows (the rows of the traced cells in problem.npz), D_true (their distances), clone_true_tree and K (the number of clones,
+not pooled).
 
 Usage: python tree.py <sim.npz> <problem.npz> <out.npz>
 """
@@ -11,8 +12,9 @@ import numpy as np
 
 
 def leaf_distances(parent, depth, leaf_rows, n):
-    """distances between the leaves listed in leaf_rows ({node: row}), from parent pointers in pre-order (a parent before its children) and each
-    node's depth"""
+    """Return the distances between the leaves in leaf_rows ({node: row}), from parent pointers in pre-order (each parent before its children) and
+    the depth of each node.
+    """
     kids = [[] for _ in range(len(parent))]
     for v in range(len(parent)):
         if parent[v] >= 0:

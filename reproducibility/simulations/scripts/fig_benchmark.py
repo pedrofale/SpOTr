@@ -1,15 +1,18 @@
-"""Fig. 2 (fig_sim_benchmark) and Fig. S1 (fig_sim_metrics): the simulation benchmark (environment benchmark_env; CPU).
+"""Fig. 2 (fig_sim_benchmark) and Fig. S1 (fig_sim_metrics), the simulation benchmark (environment benchmark_env, CPU).
 
-(A) A UMAP of the dissociated cells of the example tumor (the base world, seed 1), the tumor cells by clone and the non-tumor cells in beige.
-(B) Its Visium spots, each colored in two levels: non-tumor where the spot's non-tumor cells outnumber its tumor cells, otherwise its majority
-    clone.  (C) The same from SpOTr (non-tumor against tumor from its deconvolution, the clones from its map) and from cell2location (from its
-    abundances of each label, the clones through the true clones of each label's cells).
-(D-F) The per-clone Pearson correlation between each clone's true and estimated share of the spots (common/metrics.py, clones with at least 20
-    cells), the clones of both seeds pooled, one box per method, against the strength of the heritable programs (D), the number of dispersed
-    clones (E) and the number of clones (F).
-Fig. S1: the four metrics of Li et al. (2022), averaged over the clones of each simulated tumor, every tumor of the three studies pooled.
+(A) A UMAP of the dissociated cells of the example tumor (the base scenario, seed 1), with the tumor cells colored by clone and the non-tumor
+cells in beige.
+(B) The Visium spots of the example tumor, colored in two levels. A spot is non-tumor when it contains more non-tumor than tumor cells, and
+otherwise takes the color of the majority clone of the tumor cells in the spot.
+(C) The same from SpOTr, with non-tumor against tumor from its deconvolution and the clones from its map, and from cell2location, with the clones
+from its abundance of each label through the true clones of the cells of each label.
+(D-F) The per-clone Pearson correlation between the true and estimated proportions of each clone in the spots (common/metrics.py, clones with at
+least 20 cells), with the clones of both seeds pooled and one box per method, against the strength of the heritable programs (D), the number of
+dispersed clones (E) and the number of clones (F).
+Fig. S1 shows the four metrics of Li et al. (2022), averaged over the clones of each simulated tumor, with every tumor of the three studies
+pooled.
 
-Usage: python fig_benchmark.py   (reads config.yaml and its results; writes to common.paths.FIGURES)
+Usage: python fig_benchmark.py   (reads config.yaml and its results, and writes to common.paths.FIGURES)
 """
 import sys
 from pathlib import Path
@@ -47,7 +50,7 @@ def box(ax, x, v, w, cc):
 
 
 def umap(ax, X, colours, title, seed=0):
-    """counts normalised to 10^4 and log1p, 30 principal components, 15-neighbour graph, UMAP (scanpy)"""
+    """Return a UMAP (scanpy) of the counts normalized to 10^4 and log-transformed, from 30 principal components and a graph of 15 neighbors."""
     import anndata as ad, scanpy as sc
     a = ad.AnnData(np.asarray(X, np.float32)); sc.pp.normalize_total(a, target_sum=1e4); sc.pp.log1p(a); sc.pp.pca(a, n_comps=30, random_state=seed)
     sc.pp.neighbors(a, n_neighbors=15, random_state=seed); sc.tl.umap(a, random_state=seed)
@@ -59,7 +62,7 @@ def umap(ax, X, colours, title, seed=0):
 
 
 def scores(cfg, root):
-    """per world-seed and per clone, every method's scores"""
+    """Return the scores of every method for each clone of each seed of each scenario."""
     rows, crow = [], []
     for study, knob, value, w, _ in world.studies(cfg):
         for s in cfg["seeds"]:
@@ -74,7 +77,9 @@ def scores(cfg, root):
 
 
 def tick(root, cfg, study, value, w):
-    """the varied value as the worlds hold it: the number of dispersed clones, or of clones"""
+    """Return the tick label of a varied value, which is the strength of the heritable programs or the number of dispersed clones or of clones in
+    the seeds of the scenario.
+    """
     if study == "heritable":
         return f"{value:g}"
     n = []

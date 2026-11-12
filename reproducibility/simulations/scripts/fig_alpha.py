@@ -1,10 +1,10 @@
-"""Fig. S4 (fig_alpha_elbow): choosing the structural importance alpha at the elbow, on the example world (environment benchmark_env; CPU).
+"""Fig. S4 (fig_alpha_elbow), the choice of the structural importance alpha at the elbow on the example scenario (environment benchmark_env, CPU).
 
-(A) SpOTr's expression cost and structural cost over alpha, each normalised between the smallest and the largest alpha, and their sum, whose
-    minimum is the elbow, on the seed of Fig. 2.  (B) The per-spot clone error of each map (the mean over spots with tumor cells of the total
-    variation distance between the true and the mapped clone composition).
+(A) The expression cost and the structural cost of SpOTr over alpha, each normalized between the smallest and the largest alpha, and their sum,
+whose minimum is the elbow, on the seed of Fig. 2. (B) The per-spot clone error of each map, which is the mean over the spots with tumor cells of
+the total variation distance between the true and the mapped clone composition.
 
-Usage: python fig_alpha.py   (reads config.yaml and the results of rule spotr_grid; writes to common.paths.FIGURES)
+Usage: python fig_alpha.py   (reads config.yaml and the results of rule spotr_grid, and writes to common.paths.FIGURES)
 """
 import json
 import sys

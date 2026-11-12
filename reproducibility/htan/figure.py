@@ -1,19 +1,22 @@
-"""Fig. 4 (fig_htan_beyond) and Fig. S3 (fig_htan_purity) of the paper: HT260C1 over its H&E.
+"""Fig. 4 (fig_htan_beyond) and Fig. S3 (fig_htan_purity) of the paper, HT260C1 over its H&E.
 
-(A) Every cancer nucleus's copy-number profile (39 arm scores, log UMI regressed out, standardised; each drawn as the mean over the 21
-    neighbouring nuclei in tree order within its clone), rows in the order of the tree SpOTr is given, with the clone of each nucleus and B1's
-    two sub-lineages (blank for the B1 nuclei without a sub-lineage call).
-(B) SpOTr (alpha 0.2) and (C) cell2location: each spot by its majority label across all labels.
-(D) B1's sub-lineages, which no method is given: their copy-number signal on held-out genes inside B1's territory, and (E) SpOTr's share of
-    B1b among B1's mapped nuclei, against B1b's share of those nuclei (spots with at least a quarter of a mapped B1 nucleus).
-(F) The tree in space: each clade (A, B1, B2, B1a, B1b) and each ancestor (B, the common ancestor) at the centroid of its nuclei's expected
-    positions under SpOTr's map, arrows from parent to child, over SpOTr's clone map (B) faded; marker area grows with the number of nuclei.
-Fig. S3: balanced accuracy against the copy-number references -- within B1 (B1b vs B1a), between B1 and B2, between B and A -- for SpOTr,
-    SpOTr with the expression alone (alpha 0) and cell2location where its labels allow.  Purity: the spots beyond 0.5 sd of a reference on
-    either side; the mean of the two sides' shares of the expected group.
+(A) The CNA profile of every cancer nucleus, with rows in the order of the tree that SpOTr is given, the clone of each nucleus and the two
+sub-lineages of B1 (blank for the nuclei of B1 without a sub-lineage call). The profile is the 39 CNA scores with the log total counts regressed
+out and standardized, and each row is drawn as the mean over the 21 neighboring nuclei in tree order within its clone.
+(B) SpOTr and (C) cell2location, with each spot colored by its majority label across all labels.
+(D) The CNA signal of the sub-lineages of B1, which no method is given, on held-out genes in the territory of B1. (E) The proportion of B1b among
+the mapped nuclei of B1 in each spot under SpOTr, relative to the proportion of B1b among all nuclei of B1, on the spots with at least a quarter
+of a mapped nucleus of B1.
+(F) The tree in space, with each clade (A, B1, B2, B1a and B1b) and each ancestor (B and the common ancestor) at the centroid of the expected
+positions of its nuclei under the map of SpOTr, arrows from parent to child, and the clone map of SpOTr (B) faded underneath. The marker area
+grows with the number of nuclei.
+Fig. S3 shows the balanced accuracy against the CNA signal of the spots within B1 (B1b against B1a), between B1 and B2 and between B and A, for
+SpOTr, for SpOTr with expression alone (alpha 0) and for cell2location where its labels allow. We take the proportion of the first group in the
+mapped mass of the two groups on the spots with a signal above 0.5 standard deviations, and the proportion of the second group on the spots with
+a signal below -0.5 standard deviations, and average the two proportions.
 
 Inputs: $SPOTR_DATA/htan/{sc,st}.h5ad (prepare.py), $SPOTR_RESULTS/htan/{spotr_alpha0.2,spotr_alpha0.0,c2l}.npz (fit.py).
-Usage: python figure.py   (benchmark_env, CPU; writes fig_htan_beyond.{pdf,png} and fig_htan_purity.{pdf,png} to $SPOTR_FIGURES)
+Usage: python figure.py   (benchmark_env, CPU, writes fig_htan_beyond.{pdf,png} and fig_htan_purity.{pdf,png} to $SPOTR_FIGURES)
 """
 import sys
 from pathlib import Path
@@ -33,14 +36,16 @@ OTHER = "#9a9994"
 
 
 def he_image(st_, f=3):
-    """the H&E as stored by prepare.py (a tenth of full resolution), averaged f x f"""
+    """Return the H&E as stored by prepare.py (a tenth of full resolution), averaged over blocks of f x f pixels."""
     lib = next(iter(st_.uns["spatial"])); s = st_.uns["spatial"][lib]; im = np.asarray(s["images"]["lowres"], float) / 255.0
     h, w = (np.array(im.shape[:2]) // f) * f; im = im[:h, :w].reshape(h // f, f, w // f, f, 3).mean((1, 3))
     sf = dict(s["scalefactors"]); sf["tissue_lowres_scalef"] = float(sf["tissue_lowres_scalef"]) / f; return dict(img=im, scalefactors=sf)
 
 
 def groups(sc_, cells):
-    """each mapped nucleus's group for the scores: its clone, B1's nuclei by sub-lineage (B1new without one)"""
+    """Return the group of each mapped nucleus for the scores, which is its clone, or its sub-lineage for the nuclei of B1 (B1new for those without
+    one).
+    """
     o = sc_.obs.loc[cells]; cl = o["clone"].astype(str).to_numpy(); sl = o["sublineage"].astype(str).to_numpy()
     return np.where(cl == "B1", np.where(np.isin(sl, ["B1a", "B1b"]), sl, "B1new"), cl)
 
@@ -52,7 +57,7 @@ def contrasts(st_):
 
 
 def purity(G, con):
-    """balanced accuracy per contrast, from each group's mass per spot"""
+    """Return the balanced accuracy of each contrast from the mapped mass of each group in each spot."""
     out = {}
     for nm, (g1, g0, ref) in con.items():
         if not all(g in G for g in g1 + g0):
@@ -88,7 +93,7 @@ def main():
     def cat(ax, colours, title):
         k = np.array([c is not None for c in colours]); spots(ax, pix[k], [c for c in colours if c is not None], title, image=img, size=1.6, img_alpha=0.5, fontsize=12)
     seen = set()
-    # (A) the cancer nuclei's copy-number profiles, in the order of the tree SpOTr is given
+    # (A) the CNA profiles of the cancer nuclei, in the order of the tree that SpOTr is given
     Zs = sc_.obsm["cn_profile"][sc_.obs_names.get_indexer(cells)]; arms = [str(a) for a in sc_.uns["cn_arms"]]
     c3 = np.array([["B1", "B2", "A"].index(l) for l in lab3]); Lk = cn.clone_linkage(cn.profile_distances(Zs), c3, (0, 1, 2))
     colA = []; sa = gs[:, 0].subgridspec(1, 4, width_ratios=[0.8, 0.09, 0.09, 2.6], wspace=0.04)
@@ -123,7 +128,7 @@ def main():
     axC = fig.add_subplot(gs[0, 2]); PANELS.append((axC, "C")); cat(axC, [COL.get(l, OTHER) for l in lab], "cell2location")
     axC.legend(handles=[Line2D([], [], ls="", marker="s", ms=11, color=COL[t], label=t) for t in COL if t in seen], loc="center left", bbox_to_anchor=(1.02, 0.5),
                fontsize=12, frameon=False, title="majority label", title_fontsize=12)
-    # (D, E) B1's sub-lineages
+    # (D, E) the sub-lineages of B1
     v = np.where(terr, st_.obs["b1_signal"].to_numpy(float), np.nan); l_ = float(np.nanquantile(np.abs(v), 0.98)); cbars = []
     axD = fig.add_subplot(gs[1, 1]); PANELS.append((axD, "D"))
     spots(axD, pix, v, "Visium CNV: B1 sub-lineages", image=img, size=1.6, img_alpha=0.5, cmap="coolwarm", norm=TwoSlopeNorm(0.0, -l_, l_), fontsize=12, colorbar=False)
@@ -146,8 +151,8 @@ def main():
         dx, dy, ha = {"B1b": (-10, 8, "right"), "B1": (2, 12, "left"), "B": (10, 2, "left"), "B2": (10, -8, "left"), "B1a": (8, 6, "left"), "ancestor": (10, 4, "left"), "A": (10, 2, "left")}[k]
         axF.annotate(k, c_, xytext=(dx, dy), textcoords="offset points", ha=ha, fontsize=11, fontweight="bold", color=INK, zorder=6)
     for ax_, _ in PANELS[1:]:                                                                   # the slides pinned to the top of their cells, so that the
-        ax_.set_anchor("NE" if ax_.get_subplotspec().colspan.start == 3 else "NW")              # profiles (A) span exactly from the first row's top to the
-    fig.canvas.draw(); pt, pb = axB.get_position(), axD.get_position()                         # second row's bottom
+        ax_.set_anchor("NE" if ax_.get_subplotspec().colspan.start == 3 else "NW")              # profiles (A) span exactly from the top of the first row
+    fig.canvas.draw(); pt, pb = axB.get_position(), axD.get_position()                         # to the bottom of the second row
     for a_ in colA:
         p_ = a_.get_position(); a_.set_position([p_.x0, pb.y0, p_.width, pt.y1 - pb.y0])
     figlayout.finish(fig, PANELS)
@@ -156,7 +161,7 @@ def main():
         cb_ = fig.colorbar(m_, cax=fig.add_axes([p_.x1 + 0.005, p_.y0, 0.008, p_.height])); cb_.ax.tick_params(labelsize=9); cb_.set_label(lab_, fontsize=10, labelpad=2)
     f = paths.figure("fig_htan_beyond.pdf"); fig.savefig(f, bbox_inches="tight", dpi=200); figlayout.compress_pdf(f)
     fig.savefig(paths.figure("fig_htan_beyond.png"), dpi=60, bbox_inches="tight"); plt.close(fig)
-    # Fig. S3: balanced accuracy against the copy-number references
+    # Fig. S3, the balanced accuracy against the CNA signal of the spots
     con = contrasts(st_); Q = {f"alpha {a}": map_purity(R[a]["phi"].astype(float), groups(sc_, R[a]["cells"].astype(str)), con) for a in (0.2, 0.0)}
     w_ = np.asarray(o["w"], float); Q["c2l"] = purity({k: w_[:, ty.index(k)] for k in ("A", "B1", "B2")},
                                                     {"B1 vs B2": (["B1"], ["B2"], con["B1 vs B2"][2]), "B vs A": (["B1", "B2"], ["A"], con["B vs A"][2])})
